@@ -18,7 +18,7 @@ const accountStore = useAccountManagementStore();
 const { files, isLoading } = storeToRefs(fileTreeStore);
 const { accounts } = storeToRefs(accountStore);
 
-const isConnecting = ref(false);
+const connectingProvider = ref('');
 const connectError = ref('');
 
 const quickFiles = computed(() => files.value.filter((file) => !file.is_folder).slice(0, 6));
@@ -53,7 +53,7 @@ function formatDate(value) {
 }
 
 async function connectGoogleDrive() {
-	isConnecting.value = true;
+	connectingProvider.value = 'google_drive';
 	connectError.value = '';
 	try {
 		const { data } = await api.getGoogleConnectUrl();
@@ -61,7 +61,20 @@ async function connectGoogleDrive() {
 	} catch (error) {
 		connectError.value = error.message;
 	} finally {
-		isConnecting.value = false;
+		connectingProvider.value = '';
+	}
+}
+
+async function connectOneDrive() {
+	connectingProvider.value = 'onedrive';
+	connectError.value = '';
+	try {
+		const { data } = await api.getOneDriveConnectUrl();
+		window.location.href = data.authorizationUrl;
+	} catch (error) {
+		connectError.value = error.message;
+	} finally {
+		connectingProvider.value = '';
 	}
 }
 
@@ -90,15 +103,18 @@ onMounted(loadPage);
 
 			<section class="mb-7 grid gap-5 rounded-[20px] bg-gradient-to-b from-[#e8f0fe] to-[#f1f6ff] p-7 dark:from-slate-900 dark:to-slate-800 sm:grid-cols-[minmax(0,1.6fr)_280px]">
 				<div>
-					<p class="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-[#1a73e8]">Google Drive asli</p>
+					<p class="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-[#1a73e8]">Cloud accounts</p>
 					<h2 class="mb-2 text-[28px] font-medium text-[#202124] dark:text-slate-100">Hubungkan akun dan lihat seluruh file seperti tampilan Drive.</h2>
 					<p class="text-[#5f6368] dark:text-slate-400">
-						Sinkronisasi metadata akun Google Drive asli dan tampilkan daftar file dalam antarmuka yang menyerupai Google Drive.
+						Sinkronisasi metadata akun cloud asli dan tampilkan daftar file dalam antarmuka yang menyerupai Google Drive.
 					</p>
 
 					<div class="mt-[18px] flex flex-wrap gap-3">
-						<button type="button" class="h-10 rounded-full border border-[#1a73e8] bg-[#1a73e8] px-[18px] text-white disabled:opacity-60" :disabled="isConnecting" @click="connectGoogleDrive">
-							{{ isConnecting ? 'Menghubungkan...' : 'Hubungkan Google Drive' }}
+						<button type="button" class="h-10 rounded-full border border-[#1a73e8] bg-[#1a73e8] px-[18px] text-white disabled:opacity-60" :disabled="Boolean(connectingProvider)" @click="connectGoogleDrive">
+							{{ connectingProvider === 'google_drive' ? 'Menghubungkan Google...' : 'Hubungkan Google Drive' }}
+						</button>
+						<button type="button" class="h-10 rounded-full border border-[#dadce0] bg-white px-[18px] text-[#2563eb] disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400" :disabled="Boolean(connectingProvider)" @click="connectOneDrive">
+							{{ connectingProvider === 'onedrive' ? 'Menghubungkan OneDrive...' : 'Hubungkan OneDrive' }}
 						</button>
 						<RouterLink to="/my-drive" class="inline-flex h-10 items-center rounded-full border border-[#dadce0] bg-white px-[18px] text-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">
 							Buka Drive Saya

@@ -26,6 +26,11 @@ export const env = {
 	),
 	googleRedirectUri:
 		process.env.GOOGLE_REDIRECT_URI || 'http://localhost:8787/api/accounts/google/callback',
+	onedriveClientId: process.env.ONEDRIVE_CLIENT_ID || '',
+	onedriveClientSecret: process.env.ONEDRIVE_CLIENT_SECRET || '',
+	onedriveTenantId: process.env.ONEDRIVE_TENANT_ID || 'common',
+	onedriveRedirectUri:
+		process.env.ONEDRIVE_REDIRECT_URI || 'http://localhost:8787/api/accounts/onedrive/callback',
 };
 
 export function redactEnv() {
@@ -36,5 +41,8 @@ export function redactEnv() {
 		frontendUrl: env.frontendUrl,
 		googleCredentialsPath: env.googleCredentialsPath,
 		googleRedirectUri: env.googleRedirectUri,
+		onedriveClientId: env.onedriveClientId ? '[configured]' : '[missing]',
+		onedriveTenantId: env.onedriveTenantId,
+		onedriveRedirectUri: env.onedriveRedirectUri,
 	};
 }

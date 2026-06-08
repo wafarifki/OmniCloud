@@ -49,6 +49,12 @@ export const api = {
 	getGoogleConnectUrl() {
 		return request('/accounts/google/connect');
 	},
+	getOneDriveIntegrationStatus() {
+		return request('/accounts/onedrive/status');
+	},
+	getOneDriveConnectUrl() {
+		return request('/accounts/onedrive/connect');
+	},
 	listAccounts() {
 		return request('/accounts');
 	},
