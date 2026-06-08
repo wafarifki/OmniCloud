@@ -39,7 +39,8 @@ export function listFilesByPath(virtualPath = '/') {
         fm.*, ca.provider, ca.email
       FROM file_metadata fm
       INNER JOIN cloud_accounts ca ON ca.id = fm.cloud_account_id
-      WHERE fm.virtual_path = ?
+			WHERE fm.virtual_path = ?
+				AND ca.status = 'active'
       ORDER BY fm.is_folder DESC, fm.file_name COLLATE NOCASE ASC
     `)
 		.all(normalized);
@@ -79,7 +80,7 @@ export function getFileById(id) {
       SELECT fm.*, ca.provider, ca.email
       FROM file_metadata fm
       INNER JOIN cloud_accounts ca ON ca.id = fm.cloud_account_id
-      WHERE fm.id = ?
+			WHERE fm.id = ? AND ca.status = 'active'
     `)
 		.get(id);
 }
@@ -90,7 +91,7 @@ export function getFileByRemoteId(cloudAccountId, remoteFileId) {
       SELECT fm.*, ca.provider, ca.email
       FROM file_metadata fm
       INNER JOIN cloud_accounts ca ON ca.id = fm.cloud_account_id
-      WHERE fm.cloud_account_id = ? AND fm.remote_file_id = ?
+			WHERE fm.cloud_account_id = ? AND fm.remote_file_id = ? AND ca.status = 'active'
     `)
 		.get(cloudAccountId, remoteFileId);
 }
@@ -133,6 +134,10 @@ export function replaceFilesForAccount(cloudAccountId, records) {
 	});
 
 	replace();
+}
+
+export function clearFilesForAccount(cloudAccountId) {
+	db.prepare('DELETE FROM file_metadata WHERE cloud_account_id = ?').run(cloudAccountId);
 }
 
 export function upsertFileMetadata(record) {

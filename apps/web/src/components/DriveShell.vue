@@ -70,7 +70,7 @@ const navItems = [
 	{ id: 'shared', label: 'Dibagikan', icon: IconUsers, to: '/my-drive' },
 	{ id: 'recent', label: 'Terbaru', icon: IconClockHour4, to: '/my-drive' },
 	{ id: 'starred', label: 'Berbintang', icon: IconStar, to: '/my-drive' },
-	{ id: 'storage', label: 'Penyimpanan', icon: IconCloud, to: '/my-drive' },
+	{ id: 'storage', label: 'Penyimpanan', icon: IconCloud, to: '/quota' },
 ];
 </script>
 
@@ -88,7 +88,7 @@ const navItems = [
 				<span class="grid place-items-center text-[#5f6368] dark:text-slate-400">
 					<IconSearch :size="18" :stroke="2" />
 				</span>
-				<input type="search" placeholder="Telusuri di Drive" class="min-w-0 border-0 bg-transparent text-base text-[#202124] outline-none placeholder:text-[#5f6368] dark:text-slate-100 dark:placeholder:text-slate-400" />
+				<input type="search" placeholder="Telusuri di OmniCloud" class="min-w-0 border-0 bg-transparent text-base text-[#202124] outline-none placeholder:text-[#5f6368] dark:text-slate-100 dark:placeholder:text-slate-400" />
 				<span class="grid place-items-center text-[#5f6368] dark:text-slate-400">
 					<IconAdjustmentsHorizontal :size="18" :stroke="2" />
 				</span>

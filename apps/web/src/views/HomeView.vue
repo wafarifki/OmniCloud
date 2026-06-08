@@ -119,6 +119,9 @@ onMounted(loadPage);
 						<RouterLink to="/my-drive" class="inline-flex h-10 items-center rounded-full border border-[#dadce0] bg-white px-[18px] text-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">
 							Buka Drive Saya
 						</RouterLink>
+						<RouterLink to="/quota" class="inline-flex h-10 items-center rounded-full border border-[#dadce0] bg-white px-[18px] text-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">
+							Buka Penyimpanan
+						</RouterLink>
 					</div>
 
 					<p v-if="connectError" class="mt-2.5 text-[#d93025]">{{ connectError }}</p>

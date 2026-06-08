@@ -40,6 +40,10 @@ export function markAccountStatus(id, status) {
 	);
 }
 
+export function deleteAccount(id) {
+	db.prepare('DELETE FROM cloud_accounts WHERE id = ?').run(id);
+}
+
 export function upsertCloudAccount({
 	id,
 	email,

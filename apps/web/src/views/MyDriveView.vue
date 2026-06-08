@@ -33,6 +33,8 @@ const contextMenu = ref({ visible: false, x: 0, y: 0, file: null });
 const detailsFile = ref(null);
 const isDetailsOpen = ref(false);
 const isActionRunning = ref(false);
+const lastObservedSyncAt = ref('');
+let healthPollTimer = null;
 
 const folders = computed(() => filteredFiles.value.filter((file) => file.is_folder));
 
@@ -90,6 +92,43 @@ function resetFileInput(inputRef) {
 
 async function refreshCurrentFolder() {
 	await fileTreeStore.loadFiles(currentPath.value);
+}
+
+async function checkSyncStatus() {
+	if (document.visibilityState !== 'visible') {
+		return;
+	}
+
+	try {
+		const { sync } = await api.getHealth();
+		const nextSyncAt = sync?.lastRunAt || '';
+
+		if (!lastObservedSyncAt.value) {
+			lastObservedSyncAt.value = nextSyncAt;
+			return;
+		}
+
+		if (nextSyncAt && nextSyncAt !== lastObservedSyncAt.value) {
+			lastObservedSyncAt.value = nextSyncAt;
+			await refreshCurrentFolder();
+		}
+	} catch {
+		// Ignore lightweight sync polling failures.
+	}
+}
+
+function startHealthPolling() {
+	stopHealthPolling();
+	healthPollTimer = window.setInterval(() => {
+		checkSyncStatus();
+	}, 20000);
+}
+
+function stopHealthPolling() {
+	if (healthPollTimer) {
+		window.clearInterval(healthPollTimer);
+		healthPollTimer = null;
+	}
 }
 
 async function handleUploads(entries) {
@@ -289,15 +328,27 @@ function handleGlobalPointer() {
 	}
 }
 
+function handleVisibilityChange() {
+	if (document.visibilityState === 'visible') {
+		refreshCurrentFolder();
+		checkSyncStatus();
+	}
+}
+
 onMounted(() => {
 	fileTreeStore.loadFiles('/');
+	checkSyncStatus();
+	startHealthPolling();
 	window.addEventListener('click', handleGlobalPointer);
 	window.addEventListener('scroll', handleGlobalPointer, true);
+	document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 onBeforeUnmount(() => {
+	stopHealthPolling();
 	window.removeEventListener('click', handleGlobalPointer);
 	window.removeEventListener('scroll', handleGlobalPointer, true);
+	document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
 </script>
 

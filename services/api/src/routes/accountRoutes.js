@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listAccounts } from '../services/accountService.js';
+import { deleteAccount, getAccountById, listAccounts } from '../services/accountService.js';
 import { env } from '../config/env.js';
 import {
 	createGoogleAuthorizationRequest,
@@ -11,6 +11,7 @@ import {
 	completeOneDriveAccountLink,
 	getOneDriveIntegrationStatus,
 } from '../services/oneDriveOAuthService.js';
+import { clearFilesForAccount } from '../services/fileService.js';
 
 const router = Router();
 
@@ -91,6 +92,18 @@ router.get('/accounts/onedrive/callback', async (req, res) => {
 		frontendUrl.searchParams.set('message', error.message);
 		return res.redirect(frontendUrl.toString());
 	}
+});
+
+router.delete('/accounts/:id', (req, res) => {
+	const account = getAccountById(req.params.id);
+	if (!account) {
+		return res.status(404).json({ error: 'Account not found' });
+	}
+
+	clearFilesForAccount(account.id);
+	deleteAccount(account.id);
+
+	return res.json({ data: { success: true } });
 });
 
 export default router;

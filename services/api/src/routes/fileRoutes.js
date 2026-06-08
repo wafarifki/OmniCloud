@@ -25,6 +25,20 @@ function getFileContext(fileId) {
 	};
 }
 
+function ensureFileContext(context, res) {
+	if (!context.file) {
+		res.status(404).json({ error: 'File not found' });
+		return false;
+	}
+
+	if (!context.account || context.account.status !== 'active' || !context.adapter) {
+		res.status(409).json({ error: 'The file account is no longer connected' });
+		return false;
+	}
+
+	return true;
+}
+
 router.get('/files', (req, res) => {
 	const files = listFilesByPath(req.query.path || '/');
 	res.json({ data: files });
@@ -32,15 +46,15 @@ router.get('/files', (req, res) => {
 
 router.get('/files/:id', async (req, res, next) => {
 	try {
-		const { file, adapter } = getFileContext(req.params.id);
-		if (!file) {
-			return res.status(404).json({ error: 'File not found' });
+		const context = getFileContext(req.params.id);
+		if (!ensureFileContext(context, res)) {
+			return;
 		}
 
-		const details = await adapter.getFileDetails(file);
+		const details = await context.adapter.getFileDetails(context.file);
 		return res.json({
 			data: {
-				...file,
+				...context.file,
 				...details,
 			},
 		});
@@ -51,16 +65,16 @@ router.get('/files/:id', async (req, res, next) => {
 
 router.get('/files/:id/download', async (req, res, next) => {
 	try {
-		const { file, adapter } = getFileContext(req.params.id);
-		if (!file) {
-			return res.status(404).json({ error: 'File not found' });
+		const context = getFileContext(req.params.id);
+		if (!ensureFileContext(context, res)) {
+			return;
 		}
-		const stream = await adapter.getDownloadStream(file);
+		const stream = await context.adapter.getDownloadStream(context.file);
 
-		res.setHeader('Content-Disposition', `attachment; filename="${file.file_name}"`);
-		res.setHeader('Content-Type', file.mime_type || 'application/octet-stream');
-		if (!file.is_folder && file.size) {
-			res.setHeader('Content-Length', String(file.size));
+		res.setHeader('Content-Disposition', `attachment; filename="${context.file.file_name}"`);
+		res.setHeader('Content-Type', context.file.mime_type || 'application/octet-stream');
+		if (!context.file.is_folder && context.file.size) {
+			res.setHeader('Content-Length', String(context.file.size));
 		}
 		stream.pipe(res);
 	} catch (error) {
@@ -75,13 +89,13 @@ router.patch('/files/:id/rename', async (req, res, next) => {
 			return res.status(400).json({ error: 'New name is required' });
 		}
 
-		const { file, account, adapter } = getFileContext(req.params.id);
-		if (!file) {
-			return res.status(404).json({ error: 'File not found' });
+		const context = getFileContext(req.params.id);
+		if (!ensureFileContext(context, res)) {
+			return;
 		}
 
-		await adapter.renameFile(file, name.trim());
-		await syncAccount(account);
+		await context.adapter.renameFile(context.file, name.trim());
+		await syncAccount(context.account);
 
 		return res.json({ data: { success: true } });
 	} catch (error) {
@@ -91,13 +105,13 @@ router.patch('/files/:id/rename', async (req, res, next) => {
 
 router.delete('/files/:id', async (req, res, next) => {
 	try {
-		const { file, account, adapter } = getFileContext(req.params.id);
-		if (!file) {
-			return res.status(404).json({ error: 'File not found' });
+		const context = getFileContext(req.params.id);
+		if (!ensureFileContext(context, res)) {
+			return;
 		}
 
-		await adapter.deleteFile(file);
-		await syncAccount(account);
+		await context.adapter.deleteFile(context.file);
+		await syncAccount(context.account);
 
 		return res.json({ data: { success: true } });
 	} catch (error) {

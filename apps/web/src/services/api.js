@@ -58,8 +58,18 @@ export const api = {
 	listAccounts() {
 		return request('/accounts');
 	},
+	disconnectAccount(accountId) {
+		return request(`/accounts/${accountId}`, {
+			method: 'DELETE',
+		});
+	},
 	getHealth() {
 		return request('/health');
+	},
+	runSync() {
+		return request('/sync/run', {
+			method: 'POST',
+		});
 	},
 	initiateUpload(payload) {
 		return request('/uploads/initiate', {
