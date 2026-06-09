@@ -7,6 +7,7 @@ import {
 	IconChevronDown,
 	IconCloud,
 	IconLinkPlus,
+	IconPlugConnected,
 	IconPlugConnectedX,
 	IconRefresh,
 } from '@tabler/icons-vue';
@@ -130,6 +131,59 @@ function providerBadgeClass(status) {
 	return status === 'active'
 		? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
 		: 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300';
+}
+
+function isReconnectable(account) {
+	return ['suspended', 'invalid_token'].includes(account?.status);
+}
+
+function isAccountActionBusy(account) {
+	if (isReconnectable(account)) {
+		return connectingProvider.value === account.provider;
+	}
+
+	return isDisconnectingId.value === account.id;
+}
+
+function accountActionLabel(account) {
+	if (isReconnectable(account)) {
+		return connectingProvider.value === account.provider ? 'Menghubungkan...' : 'Connect';
+	}
+
+	return isDisconnectingId.value === account.id ? 'Memutuskan...' : 'Disconnect';
+}
+
+async function reconnectAccount(account) {
+	if (account.provider === 'google_drive') {
+		await connectGoogleDrive();
+		return;
+	}
+
+	if (account.provider === 'onedrive') {
+		await connectOneDrive();
+		return;
+	}
+
+	if (account.provider === 'dropbox') {
+		await connectDropbox();
+		return;
+	}
+
+	if (account.provider === 'mega') {
+		openMegaModal();
+		return;
+	}
+
+	actionError.value = `Provider ${providerLabel(account.provider)} belum mendukung reconnect otomatis.`;
+}
+
+async function handleAccountAction(account) {
+	if (isReconnectable(account)) {
+		await reconnectAccount(account);
+		return;
+	}
+
+	await disconnectAccount(account);
 }
 
 async function loadPage() {
@@ -341,9 +395,18 @@ onMounted(loadPage);
 						</div>
 
 						<div class="mt-4 flex items-center justify-between gap-3">
-							<button type="button" class="inline-flex h-10 items-center gap-2 rounded-full border border-[#f3c7c4] bg-white px-4 text-[#c5221f] disabled:opacity-60 dark:border-red-900/50 dark:bg-slate-800 dark:text-red-300" :disabled="isDisconnectingId === account.id" @click="disconnectAccount(account)">
-								<IconPlugConnectedX :size="18" :stroke="2" />
-								<span>{{ isDisconnectingId === account.id ? 'Memutuskan...' : 'Disconnect' }}</span>
+							<button
+								type="button"
+								class="inline-flex h-10 items-center gap-2 rounded-full border bg-white px-4 disabled:opacity-60 dark:bg-slate-800"
+								:class="isReconnectable(account)
+									? 'border-[#c7dafc] text-[#1a73e8] dark:border-sky-900/50 dark:text-sky-300'
+									: 'border-[#f3c7c4] text-[#c5221f] dark:border-red-900/50 dark:text-red-300'"
+								:disabled="isAccountActionBusy(account)"
+								@click="handleAccountAction(account)"
+							>
+								<IconPlugConnected v-if="isReconnectable(account)" :size="18" :stroke="2" />
+								<IconPlugConnectedX v-else :size="18" :stroke="2" />
+								<span>{{ accountActionLabel(account) }}</span>
 							</button>
 
 							<span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize" :class="providerBadgeClass(account.status)">{{ account.status }}</span>
@@ -358,7 +421,7 @@ onMounted(loadPage);
 					Belum ada akun terhubung.
 			</div>
 
-			<MegaConnectModal v-if="isMegaModalOpen" :is-connecting="connectingProvider === 'mega'" @close="closeMegaModal" @connect="connectMega" />
+			<MegaConnectModal v-if="isMegaModalOpen" :is-connecting="connectingProvider === 'mega'" :error="actionError" @close="closeMegaModal" @connect="connectMega" />
 		</div>
 	</DriveShell>
 </template>

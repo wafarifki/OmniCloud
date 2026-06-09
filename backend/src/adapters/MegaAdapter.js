@@ -2,6 +2,10 @@ import { Storage } from 'megajs';
 import { BaseCloudAdapter } from './BaseCloudAdapter.js';
 import { decryptJson } from '../utils/crypto.js';
 
+function isMegaSessionError(error) {
+	return /invalid or expired user session|ESID|utype/i.test(error?.message || '');
+}
+
 function normalizePath(input = '/') {
 	if (!input || input === '/') return '/';
 	const prefixed = input.startsWith('/') ? input : `/${input}`;
@@ -43,18 +47,43 @@ export class MegaAdapter extends BaseCloudAdapter {
 
 		const credentials = this.readCredentials();
 		this.storagePromise = (async () => {
-			const storage = credentials.session
-				? Storage.fromJSON(credentials.session)
-				: new Storage({
-					email: credentials.email,
-					password: credentials.password,
-					autoload: true,
-					keepalive: false,
-				});
+			let sessionError = null;
 
-			await storage.ready;
-			return storage;
+			if (credentials.session) {
+				const sessionStorage = Storage.fromJSON(credentials.session);
+
+				try {
+					await sessionStorage.ready;
+					return sessionStorage;
+				} catch (error) {
+					sessionError = error;
+					await sessionStorage.close().catch(() => {});
+
+					if (!credentials.email || !credentials.password || !isMegaSessionError(error)) {
+						throw error;
+					}
+				}
+			}
+
+			if (!credentials.email || !credentials.password) {
+				throw sessionError || new Error('MEGA account credentials are incomplete');
+			}
+
+			const passwordStorage = new Storage({
+				email: credentials.email,
+				password: credentials.password,
+				secondFactorCode: credentials.secondFactorCode || undefined,
+				autoload: true,
+				keepalive: false,
+			});
+
+			await passwordStorage.ready;
+			return passwordStorage;
 		})();
+
+		this.storagePromise.catch(() => {
+			this.storagePromise = null;
+		});
 
 		return this.storagePromise;
 	}

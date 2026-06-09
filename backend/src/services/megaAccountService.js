@@ -10,6 +10,18 @@ function isMegaTemporaryError(error) {
 	return /EAGAIN|temporary congestion|server malfunction/i.test(error?.message || '');
 }
 
+function isMegaInvalidCredentialError(error) {
+	return /wrong password|ENOENT \(-9\)|invalid password|invalid email|authentication failed/i.test(error?.message || '');
+}
+
+function normalizeMegaConnectError(error) {
+	if (isMegaInvalidCredentialError(error)) {
+		return new Error('Email atau password MEGA salah. Silakan periksa kembali kredensial Anda.');
+	}
+
+	return error;
+}
+
 function wait(ms) {
 	return new Promise((resolve) => {
 		setTimeout(resolve, ms);
@@ -47,7 +59,7 @@ export async function connectMegaAccount({ email, password, secondFactorCode }) 
 		throw createMegaTemporaryError();
 	}
 
-	throw lastError;
+	throw normalizeMegaConnectError(lastError);
 }
 
 async function connectMegaAccountOnce({ email, password, secondFactorCode }) {

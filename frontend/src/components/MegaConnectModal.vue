@@ -6,6 +6,10 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	error: {
+		type: String,
+		default: '',
+	},
 });
 
 const emit = defineEmits(['close', 'connect']);
@@ -35,8 +39,11 @@ function submitForm() {
 		<form class="w-full max-w-md rounded-[28px] border border-[#e0e3e7] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.24)] dark:border-slate-700 dark:bg-slate-900" @submit.prevent="submitForm">
 			<div class="mb-5">
 				<h2 class="text-xl font-medium">Hubungkan MEGA</h2>
-				<p class="mt-1 text-sm text-[#5f6368] dark:text-slate-400">Masukkan kredensial MEGA. Data disimpan terenkripsi di backend lokal.</p>
 			</div>
+
+			<p v-if="error" class="mb-4 rounded-2xl bg-[#fce8e6] px-4 py-3 text-sm text-[#c5221f] dark:bg-red-950/40 dark:text-red-300">
+				{{ error }}
+			</p>
 
 			<label class="mb-3 block text-sm">
 				<span class="mb-1 block text-[#5f6368] dark:text-slate-400">Email</span>
