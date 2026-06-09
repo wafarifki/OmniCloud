@@ -4,6 +4,7 @@ import healthRoutes from './routes/healthRoutes.js';
 import accountRoutes from './routes/accountRoutes.js';
 import fileRoutes from './routes/fileRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import settingsRoutes from './routes/settingsRoutes.js';
 import { env } from './config/env.js';
 
 export function createApp() {
@@ -20,6 +21,7 @@ export function createApp() {
 	app.use('/api', accountRoutes);
 	app.use('/api', fileRoutes);
 	app.use('/api', uploadRoutes);
+	app.use('/api', settingsRoutes);
 
 	app.use((error, _req, res, _next) => {
 		console.error(error);

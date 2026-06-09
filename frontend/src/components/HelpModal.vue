@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IconBook2, IconFolderPlus, IconLifebuoy, IconSearch, IconUpload, IconX } from '@tabler/icons-vue';
 
 defineProps({
@@ -7,23 +9,28 @@ defineProps({
 
 const emit = defineEmits(['close']);
 
-const quickActions = [
+const { t, tm } = useI18n();
+
+const usageTips = computed(() => tm('help.usageTipsList'));
+const connectAccountSteps = computed(() => tm('help.connectAccountSteps'));
+
+const quickActions = computed(() => [
 	{
 		icon: IconFolderPlus,
-		title: 'Buat folder baru',
-		description: 'Gunakan tombol Baru untuk membuat folder baru langsung dari penyimpanan aktif.',
+		title: t('help.createFolder'),
+		description: t('help.createFolderDesc'),
 	},
 	{
 		icon: IconUpload,
-		title: 'Upload file atau folder',
-		description: 'Unggah file maupun folder dan pantau progresnya lewat notifikasi proses di aplikasi.',
+		title: t('help.uploadFiles'),
+		description: t('help.uploadFilesDesc'),
 	},
 	{
 		icon: IconSearch,
-		title: 'Cari file lebih cepat',
-		description: 'Manfaatkan kolom pencarian di bagian atas untuk menelusuri file di OmniCloud.',
+		title: t('help.searchFiles'),
+		description: t('help.searchFilesDesc'),
 	},
-];
+]);
 
 function closeModal() {
 	emit('close');
@@ -34,7 +41,7 @@ function closeModal() {
 	<Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
 		<div v-if="open" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 px-4 py-8 backdrop-blur-sm" @click.self="closeModal">
 			<div class="relative flex max-h-[calc(100vh-4rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-[#dfe6f1] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] dark:border-slate-700 dark:bg-slate-900 dark:shadow-[0_28px_80px_rgba(2,6,23,0.65)]">
-				<button type="button" class="absolute right-4 top-4 z-10 grid size-10 place-items-center rounded-full text-[#5f6368] transition hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10" aria-label="Tutup bantuan" @click="closeModal">
+				<button type="button" class="absolute right-4 top-4 z-10 grid size-10 place-items-center rounded-full text-[#5f6368] transition hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10" :aria-label="t('common.close')" @click="closeModal">
 					<IconX :size="20" :stroke="2" />
 				</button>
 
@@ -46,11 +53,11 @@ function closeModal() {
 						<div class="min-w-0 flex-1 pt-1">
 							<div class="mb-2 inline-flex items-center gap-2 rounded-full bg-[#eef4ff] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#1a73e8] dark:bg-blue-500/15 dark:text-blue-300">
 								<IconBook2 :size="14" :stroke="2" />
-								<span>Pusat Bantuan</span>
+								<span>{{ t('help.centerTitle') }}</span>
 							</div>
-							<h3 class="text-2xl font-semibold text-[#202124] dark:text-slate-100">Bantuan cepat OmniCloud</h3>
+							<h3 class="text-2xl font-semibold text-[#202124] dark:text-slate-100">{{ t('help.title') }}</h3>
 							<p class="mt-1 text-sm leading-6 text-[#5f6368] dark:text-slate-400">
-								Ringkasan singkat untuk membantu Anda memahami alur utama OmniCloud dengan lebih cepat.
+								{{ t('help.subtitle') }}
 							</p>
 						</div>
 					</div>
@@ -68,57 +75,44 @@ function closeModal() {
 					</div>
 
 					<div class="rounded-[24px] border border-[#e7edf6] bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-800/60">
-						<h4 class="text-sm font-semibold text-[#202124] dark:text-slate-100">Tips penggunaan</h4>
+						<h4 class="text-sm font-semibold text-[#202124] dark:text-slate-100">{{ t('help.usageTips') }}</h4>
 						<ul class="mt-3 space-y-2 text-sm leading-6 text-[#5f6368] dark:text-slate-400">
-							<li>• Gunakan menu sidebar untuk berpindah antara beranda, drive, dan ringkasan penyimpanan.</li>
-							<li>• Klik logo OmniCloud di desktop untuk membuka profil creator dan informasi proyek open source.</li>
-							<li>• Tekan tombol <span class="font-semibold text-[#202124] dark:text-slate-200">Esc</span> untuk menutup dialog yang sedang terbuka.</li>
+							<li v-for="(tip, index) in usageTips" :key="index">• {{ tip }}</li>
 						</ul>
 					</div>
 
 					<div class="rounded-[24px] border border-[#e7edf6] bg-[#f8fafd] px-5 py-4 dark:border-slate-800 dark:bg-slate-800/70">
-						<h4 class="text-sm font-semibold text-[#202124] dark:text-slate-100">Cara menghubungkan akun cloud</h4>
+						<h4 class="text-sm font-semibold text-[#202124] dark:text-slate-100">{{ t('help.connectAccount') }}</h4>
 						<div class="mt-3 space-y-3 text-sm leading-6 text-[#5f6368] dark:text-slate-400">
-							<p>
-								Buka halaman <span class="font-semibold text-[#202124] dark:text-slate-200">Penyimpanan</span>, lalu tekan tombol
-								<span class="font-semibold text-[#202124] dark:text-slate-200">Hubungkan</span> untuk memilih provider seperti Google Drive,
-								OneDrive, Dropbox, atau MEGA.
-							</p>
-							<p>
-								Setelah itu ikuti proses login atau otorisasi sesuai provider. Jika akun terputus, suspended, atau token sudah tidak valid,
-								gunakan tombol <span class="font-semibold text-[#202124] dark:text-slate-200">Connect</span> untuk mencoba koneksi ulang.
-							</p>
-							<p>
-								Sesudah berhasil terhubung, kapasitas penyimpanan dan file dari akun tersebut akan tampil otomatis di OmniCloud.
-							</p>
+							<p v-for="(step, index) in connectAccountSteps" :key="index">{{ step }}</p>
 						</div>
 					</div>
 
 					<div class="rounded-[24px] border border-[#e7edf6] bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-800/60">
-						<h4 class="text-sm font-semibold text-[#202124] dark:text-slate-100">Cara kerja OmniCloud</h4>
+						<h4 class="text-sm font-semibold text-[#202124] dark:text-slate-100">{{ t('help.howItWorks') }}</h4>
 						<div class="mt-4 space-y-3">
 							<div class="flex gap-3">
 								<div class="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-[#e8f0fe] text-xs font-bold text-[#1a73e8] dark:bg-blue-500/15 dark:text-blue-300">1</div>
 								<p class="text-sm leading-6 text-[#5f6368] dark:text-slate-400">
-									Anda menghubungkan beberapa akun cloud dari berbagai provider ke dalam satu dashboard OmniCloud.
+									{{ t('help.howItWorksStep1') }}
 								</p>
 							</div>
 							<div class="flex gap-3">
 								<div class="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-[#e8f0fe] text-xs font-bold text-[#1a73e8] dark:bg-blue-500/15 dark:text-blue-300">2</div>
 								<p class="text-sm leading-6 text-[#5f6368] dark:text-slate-400">
-									Aplikasi akan menyinkronkan metadata file dan kapasitas penyimpanan agar semua akun bisa dilihat dari satu tempat.
+									{{ t('help.howItWorksStep2') }}
 								</p>
 							</div>
 							<div class="flex gap-3">
 								<div class="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-[#e8f0fe] text-xs font-bold text-[#1a73e8] dark:bg-blue-500/15 dark:text-blue-300">3</div>
 								<p class="text-sm leading-6 text-[#5f6368] dark:text-slate-400">
-									Saat Anda membuat folder, upload, rename, atau delete, OmniCloud akan meneruskan aksi itu ke provider terkait dan menampilkan progresnya di antarmuka.
+									{{ t('help.howItWorksStep3') }}
 								</p>
 							</div>
 							<div class="flex gap-3">
 								<div class="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-[#e8f0fe] text-xs font-bold text-[#1a73e8] dark:bg-blue-500/15 dark:text-blue-300">4</div>
 								<p class="text-sm leading-6 text-[#5f6368] dark:text-slate-400">
-									Dengan begitu, OmniCloud berfungsi sebagai lapisan manajemen terpadu untuk banyak akun cloud dalam satu pengalaman yang lebih rapi.
+									{{ t('help.howItWorksStep4') }}
 								</p>
 							</div>
 						</div>

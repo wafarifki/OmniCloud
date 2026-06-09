@@ -18,6 +18,18 @@ async function request(path, options = {}) {
 	return response.json();
 }
 
+export const settingsApi = {
+	getSettings() {
+		return request('/settings');
+	},
+	updateSettings(payload) {
+		return request('/settings', {
+			method: 'PATCH',
+			body: JSON.stringify(payload),
+		});
+	},
+};
+
 export const api = {
 	listFiles(virtualPath = '/') {
 		const query = new URLSearchParams({ path: virtualPath }).toString();
@@ -124,5 +136,11 @@ export const api = {
 	},
 	previewUrl(fileId) {
 		return `${API_BASE_URL}/files/${fileId}/preview`;
+	},
+	getSettings() {
+		return settingsApi.getSettings();
+	},
+	updateSettings(payload) {
+		return settingsApi.updateSettings(payload);
 	},
 };

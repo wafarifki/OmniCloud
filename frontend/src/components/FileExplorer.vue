@@ -1,7 +1,10 @@
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IconChevronRight, IconDownload, IconFileDescription, IconFolder } from '@tabler/icons-vue';
 import { api } from '../services/api';
+
+const { t } = useI18n();
 
 const props = defineProps({
 	files: { type: Array, required: true },
@@ -26,10 +29,10 @@ function openFolder(file) {
 	<section class="rounded-[28px] border border-[#e6ebf2] bg-white p-6 shadow-sm">
 		<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#1a73e8]">Unified file explorer</p>
-				<h2 class="mt-2 text-2xl font-semibold text-[#202124]">Virtual path pooling</h2>
+				<p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#1a73e8]">{{ t('fileExplorer.unifiedExplorer') }}</p>
+				<h2 class="mt-2 text-2xl font-semibold text-[#202124]">{{ t('fileExplorer.virtualPooling') }}</h2>
 			</div>
-			<input class="h-11 w-full rounded-full border border-[#d6deea] bg-[#fbfcff] px-4 text-sm outline-none sm:w-[280px]" type="search" :value="searchTerm" placeholder="Search in current folder..." @input="emit('search', $event.target.value)" />
+			<input class="h-11 w-full rounded-full border border-[#d6deea] bg-[#fbfcff] px-4 text-sm outline-none sm:w-[280px]" type="search" :value="searchTerm" :placeholder="t('fileExplorer.searchInFolder')" @input="emit('search', $event.target.value)" />
 		</div>
 
 		<nav class="mb-5 flex flex-wrap items-center gap-1.5">
@@ -50,16 +53,16 @@ function openFolder(file) {
 				</div>
 				<div class="flex flex-wrap items-center gap-3 text-sm text-[#5f6368] sm:justify-end">
 					<span>{{ file.provider }}</span>
-					<span>{{ file.is_folder ? 'Folder' : file.mime_type || 'File' }}</span>
+					<span>{{ file.is_folder ? t('fileExplorer.folder') : file.mime_type || t('fileExplorer.file') }}</span>
 					<a v-if="!file.is_folder" :href="api.downloadUrl(file.id)" class="inline-flex items-center gap-1 font-medium text-[#1a73e8]">
 						<IconDownload :size="16" :stroke="2" />
-						Download
+						{{ t('fileExplorer.download') }}
 					</a>
 				</div>
 			</article>
 
-			<div v-if="!visibleFiles.length && !loading" class="p-5 text-sm text-[#5f6368]">No files in this virtual path.</div>
-			<div v-if="loading" class="p-5 text-sm text-[#5f6368]">Loading metadata mirror...</div>
+			<div v-if="!visibleFiles.length && !loading" class="p-5 text-sm text-[#5f6368]">{{ t('fileExplorer.noFiles') }}</div>
+			<div v-if="loading" class="p-5 text-sm text-[#5f6368]">{{ t('fileExplorer.loading') }}</div>
 		</div>
 	</section>
 </template>

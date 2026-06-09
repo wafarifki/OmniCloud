@@ -1,7 +1,10 @@
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IconBrandGoogleDrive } from '@tabler/icons-vue';
 import { api } from '../services/api';
+
+const { t } = useI18n();
 
 const props = defineProps({
 	accounts: { type: Array, required: true },
@@ -46,12 +49,12 @@ async function connectGoogleDrive() {
 	<section class="rounded-[28px] border border-[#e6ebf2] bg-white p-6 shadow-sm">
 		<div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#1a73e8]">Integrated Accounts</p>
-				<h2 class="mt-2 text-2xl font-semibold text-[#202124]">Visual quota overview</h2>
+				<p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#1a73e8]">{{ t('storagePanel.integratedAccounts') }}</p>
+				<h2 class="mt-2 text-2xl font-semibold text-[#202124]">{{ t('storagePanel.quotaOverview') }}</h2>
 			</div>
 			<button type="button" class="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60" :disabled="isConnecting" @click="connectGoogleDrive">
 				<IconBrandGoogleDrive :size="18" :stroke="2" />
-				{{ isConnecting ? 'Connecting...' : 'Connect Google Drive' }}
+				{{ isConnecting ? t('storagePanel.connecting') : t('storagePanel.connectGoogle') }}
 			</button>
 		</div>
 
@@ -72,13 +75,13 @@ async function connectGoogleDrive() {
 				</div>
 
 				<div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-[#5f6368]">
-					<span>{{ formatBytes(account.used_space) }} used</span>
-					<span>{{ formatBytes(account.free_space) }} free</span>
+					<span>{{ formatBytes(account.used_space) }} {{ t('storagePanel.used') }}</span>
+					<span>{{ formatBytes(account.free_space) }} {{ t('storagePanel.free') }}</span>
 				</div>
 			</article>
 
 			<div v-if="!props.accounts.length" class="rounded-3xl border border-[#e6ebf2] bg-[#fbfcff] p-5 text-sm text-[#5f6368]">
-				No connected accounts yet.
+				{{ t('storagePanel.noAccounts') }}
 			</div>
 		</div>
 	</section>

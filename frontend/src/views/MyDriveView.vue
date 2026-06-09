@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useI18n } from 'vue-i18n';
 import {
 	IconChevronRight,
 	IconChevronDown,
@@ -45,6 +46,8 @@ import TruncateMarquee from '../components/TruncateMarquee.vue';
 import { useFileTreeStore } from '../stores/fileTree';
 import { useUploadQueueStore } from '../stores/uploadQueue';
 import { api } from '../services/api';
+
+const { t } = useI18n();
 
 const fileTreeStore = useFileTreeStore();
 const uploadQueueStore = useUploadQueueStore();
@@ -97,25 +100,25 @@ const ownerOptions = computed(() => {
 	return owners.sort((left, right) => left.localeCompare(right, 'id'));
 });
 
-const typeOptions = [
-	{ value: 'all', label: 'Semua jenis' },
-	{ value: 'folder', label: 'Folder' },
-	{ value: 'document', label: 'Dokumen' },
-	{ value: 'image', label: 'Gambar' },
-	{ value: 'pdf', label: 'PDF' },
-	{ value: 'video', label: 'Video' },
-	{ value: 'audio', label: 'Audio' },
-	{ value: 'archive', label: 'Arsip' },
-];
+const typeOptions = computed(() => [
+	{ value: 'all', label: t('filters.allTypes') },
+	{ value: 'folder', label: t('filters.folder') },
+	{ value: 'document', label: t('filters.document') },
+	{ value: 'image', label: t('filters.image') },
+	{ value: 'pdf', label: t('filters.pdf') },
+	{ value: 'video', label: t('filters.video') },
+	{ value: 'audio', label: t('filters.audio') },
+	{ value: 'archive', label: t('filters.archive') },
+]);
 
-const updatedOptions = [
-	{ value: 'all', label: 'Semua waktu' },
-	{ value: 'today', label: 'Hari ini' },
-	{ value: 'last7', label: '7 hari terakhir' },
-	{ value: 'last30', label: '30 hari terakhir' },
-	{ value: 'thisYear', label: 'Tahun ini' },
-	{ value: 'lastYear', label: 'Tahun lalu' },
-];
+const updatedOptions = computed(() => [
+	{ value: 'all', label: t('filters.allTimes') },
+	{ value: 'today', label: t('filters.today') },
+	{ value: 'last7', label: t('filters.last7') },
+	{ value: 'last30', label: t('filters.last30') },
+	{ value: 'thisYear', label: t('filters.thisYear') },
+	{ value: 'lastYear', label: t('filters.lastYear') },
+]);
 
 const visibleFiles = computed(() => {
 	return filteredFiles.value.filter((file) => {
@@ -289,8 +292,8 @@ function getTypeFilterIcon(value, filled = false) {
 }
 
 function getFilterLabel(type, value) {
-	if (type === 'type') return typeOptions.find((option) => option.value === value)?.label || 'Jenis';
-	if (type === 'updated') return updatedOptions.find((option) => option.value === value)?.label || 'Diubah';
+	if (type === 'type') return typeOptions.value.find((option) => option.value === value)?.label || t('filters.type');
+	if (type === 'updated') return updatedOptions.value.find((option) => option.value === value)?.label || t('filters.modified');
 	return value;
 }
 
@@ -352,7 +355,7 @@ function toggleViewMode(mode) {
 }
 
 function renderOwnerLabel(value) {
-	return value === 'all' ? 'Semua orang' : value;
+	return value === 'all' ? t('filters.allOwners') : value;
 }
 
 function openFolder(file) {
@@ -646,7 +649,7 @@ async function handleDrop(event) {
 }
 
 async function createNewFolder() {
-	const folderName = window.prompt('Nama folder baru');
+	const folderName = window.prompt(t('drive.newFolderName'));
 	if (!folderName?.trim()) return;
 
 	actionError.value = '';
@@ -669,7 +672,7 @@ async function renameSelectedFile() {
 	const file = primarySelectedFile.value || contextMenu.value.file;
 	if (!file) return;
 
-	const nextName = window.prompt('Nama baru', file.file_name);
+	const nextName = window.prompt(t('drive.newNamePrompt'), file.file_name);
 	closeContextMenu();
 
 	if (!nextName?.trim() || nextName.trim() === file.file_name) return;
@@ -691,7 +694,7 @@ async function deleteSelectedFile() {
 	const files = getActionFiles();
 	if (!files.length) return;
 
-	const confirmed = window.confirm(files.length === 1 ? `Hapus ${files[0].file_name}?` : `Hapus ${files.length} item yang dipilih?`);
+	const confirmed = window.confirm(files.length === 1 ? t('drive.deleteConfirm', { name: files[0].file_name }) : t('drive.deleteConfirm', { name: files.length + ' ' + t('common.items') }));
 	closeContextMenu();
 	if (!confirmed) return;
 
@@ -775,7 +778,7 @@ function handlePreviewLoaded() {
 
 function handlePreviewFailed() {
 	isPreviewLoading.value = false;
-	actionError.value = 'Preview gagal dimuat. Beberapa file provider memang tidak kompatibel untuk preview ringan.';
+	actionError.value = t('drive.previewFailed');
 }
 
 function toggleSort(field) {
@@ -909,7 +912,7 @@ onBeforeUnmount(() => {
 					</button>
 					<div v-if="activeFilterMenu === 'owner'" class="absolute right-0 top-full z-30 mt-2 min-w-[260px] overflow-hidden rounded-2xl border border-[#e0e3e7] bg-white p-2 shadow-[0_16px_40px_rgba(32,33,36,0.16)] dark:border-slate-700 dark:bg-slate-800">
 						<button type="button" class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-[#202124] hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-700/70" @click="applyFilter('owner', 'all')">
-							<span>Semua orang</span>
+							<span>{{ t('filters.allOwners') }}</span>
 							<IconCheck v-if="selectedOwnerFilter === 'all'" :size="16" :stroke="2" class="text-[#1a73e8] dark:text-sky-300" />
 						</button>
 						<button v-for="owner in ownerOptions" :key="owner" type="button" class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-[#202124] hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-700/70" @click="applyFilter('owner', owner)">
@@ -935,7 +938,7 @@ onBeforeUnmount(() => {
 
 			<div v-if="suggestedFolders.length" class="mb-[18px]">
 				<div class="mb-3 flex items-center justify-between gap-3">
-					<h2 class="m-0 text-base font-medium text-[#202124] dark:text-slate-100">Saran</h2>
+					<h2 class="m-0 text-base font-medium text-[#202124] dark:text-slate-100">{{ t('suggestions.title') }}</h2>
 				</div>
 
 				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -948,33 +951,33 @@ onBeforeUnmount(() => {
 
 			<div class="mb-3 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
 				<div v-if="selectedCount" class="flex flex-wrap items-center gap-1.5 rounded-full bg-[#e8f0fe] px-2 py-1 text-[#174ea6] dark:bg-sky-500/15 dark:text-sky-200">
-					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full transition hover:bg-[#d2e3fc] dark:hover:bg-sky-500/20" title="Batal pilih" @click="clearSelection">
+					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full transition hover:bg-[#d2e3fc] dark:hover:bg-sky-500/20" :title="t('drive.deselectAll')" @click="clearSelection">
 						<IconX :size="18" :stroke="2" />
 					</button>
-					<span class="pr-2 text-sm font-semibold">{{ selectedCount }} dipilih</span>
-					<button v-if="primarySelectedFile?.is_folder && selectedCount === 1" type="button" class="inline-flex size-9 items-center justify-center rounded-full transition hover:bg-[#d2e3fc] dark:hover:bg-sky-500/20" title="Buka" @click="openSelectedItem">
+					<span class="pr-2 text-sm font-semibold">{{ selectedCount }} {{ t('drive.selected', { count: selectedCount }) }}</span>
+					<button v-if="primarySelectedFile?.is_folder && selectedCount === 1" type="button" class="inline-flex size-9 items-center justify-center rounded-full transition hover:bg-[#d2e3fc] dark:hover:bg-sky-500/20" :title="t('common.open')" @click="openSelectedItem">
 						<IconFolder :size="18" :stroke="2" />
 					</button>
-					<button v-if="selectedCount === 1 && !primarySelectedFile?.is_folder" type="button" class="inline-flex size-9 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:bg-[#d2e3fc] dark:enabled:hover:bg-sky-500/20" title="Pratinjau" :disabled="!canPreviewSelection" @click="openPreview(primarySelectedFile)">
+					<button v-if="selectedCount === 1 && !primarySelectedFile?.is_folder" type="button" class="inline-flex size-9 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:bg-[#d2e3fc] dark:enabled:hover:bg-sky-500/20" :title="t('drive.preview')" :disabled="!canPreviewSelection" @click="openPreview(primarySelectedFile)">
 						<IconEye :size="18" :stroke="2" />
 					</button>
-					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:bg-[#d2e3fc] dark:enabled:hover:bg-sky-500/20" title="Unduh" :disabled="!canDownloadSelection" @click="downloadSelection">
+					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:bg-[#d2e3fc] dark:enabled:hover:bg-sky-500/20" :title="t('common.download')" :disabled="!canDownloadSelection" @click="downloadSelection">
 						<IconDownload :size="18" :stroke="2" />
 					</button>
-					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:bg-[#d2e3fc] dark:enabled:hover:bg-sky-500/20" title="Ganti Nama" :disabled="!canRenameSelection" @click="renameSelectedFile">
+					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:bg-[#d2e3fc] dark:enabled:hover:bg-sky-500/20" :title="t('common.edit')" :disabled="!canRenameSelection" @click="renameSelectedFile">
 						<IconEdit :size="18" :stroke="2" />
 					</button>
-					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:bg-[#d2e3fc] dark:enabled:hover:bg-sky-500/20" title="Detail" :disabled="selectedCount !== 1" @click="showSelectedFileDetails">
+					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:bg-[#d2e3fc] dark:enabled:hover:bg-sky-500/20" :title="t('drive.details')" :disabled="selectedCount !== 1" @click="showSelectedFileDetails">
 						<IconInfoCircle :size="18" :stroke="2" />
 					</button>
-					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full text-[#c5221f] transition hover:bg-[#fce8e6] dark:text-red-300 dark:hover:bg-red-950/30" title="Hapus" @click="deleteSelectedFile">
+					<button type="button" class="inline-flex size-9 items-center justify-center rounded-full text-[#c5221f] transition hover:bg-[#fce8e6] dark:text-red-300 dark:hover:bg-red-950/30" :title="t('common.delete')" @click="deleteSelectedFile">
 						<IconTrash :size="18" :stroke="2" />
 					</button>
 				</div>
-				<h2 v-else class="m-0 text-base font-medium text-[#202124] dark:text-slate-100">File</h2>
+				<h2 v-else class="m-0 text-base font-medium text-[#202124] dark:text-slate-100">{{ t('common.file') }}</h2>
 				<div class="relative w-full sm:w-[280px]">
 					<IconSearch :size="18" :stroke="2" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#5f6368] dark:text-slate-400" />
-					<input class="h-11 w-full rounded-full border border-[#dadce0] bg-white pl-11 pr-4 text-sm text-[#202124] outline-none transition focus:border-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-400" type="search" :value="searchTerm" placeholder="Telusuri folder ini" @input="fileTreeStore.applySearch($event.target.value)" />
+					<input class="h-11 w-full rounded-full border border-[#dadce0] bg-white pl-11 pr-4 text-sm text-[#202124] outline-none transition focus:border-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-400" type="search" :value="searchTerm" :placeholder="t('drive.searchInFolder')" @input="fileTreeStore.applySearch($event.target.value)" />
 				</div>
 			</div>
 
@@ -984,19 +987,19 @@ onBeforeUnmount(() => {
 				<div class="min-w-[760px]">
 					<div class="sticky top-0 z-10 grid min-h-11 grid-cols-[minmax(260px,2fr)_minmax(180px,1.1fr)_minmax(150px,1fr)_140px] items-center gap-3 border-b border-[#e8eaed] bg-[#f8fafd]/95 px-[18px] text-[13px] text-[#5f6368] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-400">
 						<button type="button" class="flex items-center gap-1 text-left hover:text-[#1a73e8]" @click="toggleSort('file_name')">
-							<span>Nama</span>
+							<span>{{ t('drive.sortByName') }}</span>
 							<component :is="sortIndicator('file_name')" v-if="sortIndicator('file_name')" :size="14" :stroke="2" />
 						</button>
 						<button type="button" class="flex items-center gap-1 text-left hover:text-[#1a73e8]" @click="toggleSort('email')">
-							<span>Pemilik</span>
+							<span>{{ t('home.fileOwner') }}</span>
 							<component :is="sortIndicator('email')" v-if="sortIndicator('email')" :size="14" :stroke="2" />
 						</button>
 						<button type="button" class="flex items-center gap-1 text-left hover:text-[#1a73e8]" @click="toggleSort('updated_at')">
-							<span>Terakhir diubah</span>
+							<span>{{ t('home.fileModified') }}</span>
 							<component :is="sortIndicator('updated_at')" v-if="sortIndicator('updated_at')" :size="14" :stroke="2" />
 						</button>
 						<button type="button" class="flex items-center gap-1 text-left hover:text-[#1a73e8]" @click="toggleSort('size')">
-							<span>Ukuran file</span>
+							<span>{{ t('drive.size') }}</span>
 							<component :is="sortIndicator('size')" v-if="sortIndicator('size')" :size="14" :stroke="2" />
 						</button>
 					</div>
@@ -1017,8 +1020,8 @@ onBeforeUnmount(() => {
 							<span class="text-[#5f6368] dark:text-slate-400">{{ item.is_folder ? '—' : formatBytes(item.size) }}</span>
 						</div>
 
-						<div v-if="!sortedFiles.length && !isLoading" class="p-[18px] text-[#5f6368] dark:text-slate-400">Tidak ada file pada lokasi ini.</div>
-						<div v-if="isLoading" class="p-[18px] text-[#5f6368] dark:text-slate-400">Memuat metadata mirror...</div>
+						<div v-if="!sortedFiles.length && !isLoading" class="p-[18px] text-[#5f6368] dark:text-slate-400">{{ t('drive.noFiles') }}</div>
+						<div v-if="isLoading" class="p-[18px] text-[#5f6368] dark:text-slate-400">{{ t('drive.loadingMetadata') }}</div>
 					</div>
 				</div>
 			</div>
@@ -1037,44 +1040,44 @@ onBeforeUnmount(() => {
 								<div v-if="providerIcon(item.provider)" class="flex size-6 shrink-0 items-center justify-center rounded-full bg-white dark:bg-slate-900/70">
 									<img :src="providerIcon(item.provider)" :alt="providerLabel(item.provider)" class="size-3.5 object-contain" />
 								</div>
-								<TruncateMarquee as="p" class="min-w-0" :text="item.email || 'Tanpa pemilik'" />
+								<TruncateMarquee as="p" class="min-w-0" :text="item.email || t('drive.noOwner')" />
 							</div>
 						</div>
 						<div class="flex w-full items-center justify-between text-xs text-[#5f6368] dark:text-slate-400">
 							<span>{{ formatDate(item.updated_at) }}</span>
-							<span>{{ item.is_folder ? 'Folder' : formatBytes(item.size) }}</span>
+							<span>{{ item.is_folder ? t('drive.folder') : formatBytes(item.size) }}</span>
 						</div>
 					</button>
 				</div>
 
-				<div v-if="!sortedFiles.length && !isLoading" class="col-span-full rounded-2xl border border-dashed border-[#dadce0] bg-white px-5 py-8 text-center text-[#5f6368] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">Tidak ada file pada lokasi ini.</div>
-				<div v-if="isLoading" class="col-span-full rounded-2xl border border-dashed border-[#dadce0] bg-white px-5 py-8 text-center text-[#5f6368] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">Memuat metadata mirror...</div>
+				<div v-if="!sortedFiles.length && !isLoading" class="col-span-full rounded-2xl border border-dashed border-[#dadce0] bg-white px-5 py-8 text-center text-[#5f6368] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{{ t('drive.noFiles') }}</div>
+				<div v-if="isLoading" class="col-span-full rounded-2xl border border-dashed border-[#dadce0] bg-white px-5 py-8 text-center text-[#5f6368] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{{ t('drive.loadingMetadata') }}</div>
 			</div>
 
 			<div v-if="contextMenu.visible" ref="contextMenuRef" class="fixed z-50 min-w-[220px] overflow-hidden rounded-2xl border border-[#e0e3e7] bg-white py-2 shadow-[0_16px_40px_rgba(32,33,36,0.2)] dark:border-slate-700 dark:bg-slate-800 dark:shadow-[0_16px_40px_rgba(15,23,42,0.45)]" :style="{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px` }" @click.stop @contextmenu.stop>
 				<button v-if="primarySelectedFile?.is_folder && selectedCount === 1" type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-700/70" @click="openSelectedItem">
 					<IconFolder :size="17" :stroke="2" />
-					<span>Buka</span>
+					<span>{{ t('common.open') }}</span>
 				</button>
 				<button v-if="selectedCount === 1 && !primarySelectedFile?.is_folder" type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-100 dark:hover:bg-slate-700/70" :disabled="!canPreviewSelection" @click="openPreview(primarySelectedFile)">
 					<IconEye :size="17" :stroke="2" />
-					<span>Pratinjau</span>
+					<span>{{ t('drive.preview') }}</span>
 				</button>
 				<button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-100 dark:hover:bg-slate-700/70" :disabled="!canDownloadSelection" @click="downloadSelection">
 					<IconDownload :size="17" :stroke="2" />
-					<span>Unduh</span>
+					<span>{{ t('common.download') }}</span>
 				</button>
 				<button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-100 dark:hover:bg-slate-700/70" :disabled="!canRenameSelection" @click="renameSelectedFile">
 					<IconEdit :size="17" :stroke="2" />
-					<span>Ganti Nama</span>
+					<span>{{ t('common.edit') }}</span>
 				</button>
 				<button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-100 dark:hover:bg-slate-700/70" :disabled="selectedCount !== 1" @click="showSelectedFileDetails">
 					<IconInfoCircle :size="17" :stroke="2" />
-					<span>{{ primarySelectedFile?.is_folder ? 'Detail Folder' : 'Detail File' }}</span>
+					<span>{{ primarySelectedFile?.is_folder ? t('drive.details') + ' ' + t('drive.folder') : t('drive.details') }}</span>
 				</button>
 				<button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[#c5221f] hover:bg-[#fce8e6] dark:text-red-300 dark:hover:bg-red-950/30" @click="deleteSelectedFile">
 					<IconTrash :size="17" :stroke="2" />
-					<span>Hapus</span>
+					<span>{{ t('common.delete') }}</span>
 				</button>
 			</div>
 
@@ -1082,30 +1085,30 @@ onBeforeUnmount(() => {
 				<div class="w-full max-w-lg rounded-[28px] bg-white p-6 text-[#202124] shadow-[0_24px_60px_rgba(32,33,36,0.28)] dark:bg-slate-800 dark:text-slate-100" @click.stop>
 					<div class="flex items-start justify-between gap-4">
 						<div>
-							<h3 class="text-xl font-semibold">{{ detailsFile.is_folder ? 'Detail Folder' : 'Detail File' }}</h3>
-							<p class="mt-1 text-sm text-[#5f6368] dark:text-slate-400">Metadata dari provider dan mirror lokal.</p>
+							<h3 class="text-xl font-semibold">{{ detailsFile.is_folder ? t('drive.details') + ' ' + t('drive.folder') : t('drive.details') }}</h3>
+							<p class="mt-1 text-sm text-[#5f6368] dark:text-slate-400">{{ t('drive.metadataDescription') }}</p>
 						</div>
-						<button type="button" class="rounded-full px-3 py-1 text-sm text-[#5f6368] hover:bg-black/5 dark:text-slate-400 dark:hover:bg-white/8" @click="closeDetails">Tutup</button>
+						<button type="button" class="rounded-full px-3 py-1 text-sm text-[#5f6368] hover:bg-black/5 dark:text-slate-400 dark:hover:bg-white/8" @click="closeDetails">{{ t('common.close') }}</button>
 					</div>
 
 					<dl class="mt-6 grid grid-cols-[140px_1fr] gap-x-4 gap-y-3 text-sm">
-						<dt class="text-[#5f6368] dark:text-slate-400">Nama</dt>
+						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('common.name') }}</dt>
 						<dd>{{ detailsFile.name || detailsFile.file_name }}</dd>
-						<dt class="text-[#5f6368] dark:text-slate-400">Tipe</dt>
+						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.type') }}</dt>
 						<dd>{{ detailsFile.mime_type || detailsFile.mimeType || '—' }}</dd>
-						<dt class="text-[#5f6368] dark:text-slate-400">Ukuran</dt>
-						<dd>{{ detailsFile.is_folder ? 'Folder' : formatBytes(detailsFile.size) }}</dd>
-						<dt class="text-[#5f6368] dark:text-slate-400">Pemilik</dt>
+						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.size') }}</dt>
+						<dd>{{ detailsFile.is_folder ? t('drive.folder') : formatBytes(detailsFile.size) }}</dd>
+						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.owner') }}</dt>
 						<dd>{{ detailsFile.owner_email || detailsFile.email || '—' }}</dd>
-						<dt class="text-[#5f6368] dark:text-slate-400">Provider</dt>
+						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.provider') || 'Provider' }}</dt>
 						<dd>{{ detailsFile.provider || 'google-drive' }}</dd>
-						<dt class="text-[#5f6368] dark:text-slate-400">Dibuat</dt>
+						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.created') }}</dt>
 						<dd>{{ formatDate(detailsFile.created_at || detailsFile.createdTime) }}</dd>
-						<dt class="text-[#5f6368] dark:text-slate-400">Diubah</dt>
+						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.modified') }}</dt>
 						<dd>{{ formatDate(detailsFile.updated_at || detailsFile.modifiedTime) }}</dd>
-						<dt class="text-[#5f6368] dark:text-slate-400">Path</dt>
+						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.location') }}</dt>
 						<dd class="break-all">{{ detailsFile.virtual_path || currentPath }}</dd>
-						<dt class="text-[#5f6368] dark:text-slate-400">Remote ID</dt>
+						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.remoteId') }}</dt>
 						<dd class="break-all">{{ detailsFile.remote_file_id || detailsFile.id }}</dd>
 					</dl>
 				</div>
@@ -1126,7 +1129,7 @@ onBeforeUnmount(() => {
 
 					<div class="relative min-h-[420px] flex-1 bg-[#f8fafd] dark:bg-slate-950">
 						<div v-if="isPreviewLoading" class="absolute inset-0 z-10 grid place-items-center text-sm text-[#5f6368] dark:text-slate-400">
-							Memuat preview...
+							{{ t('preview.loading') }}
 						</div>
 
 						<img v-if="previewFile.previewType === 'image'" :src="previewFile.previewUrl" class="max-h-[75vh] w-full object-contain" alt="Preview file" @load="handlePreviewLoaded" @error="handlePreviewFailed" />
@@ -1144,13 +1147,13 @@ onBeforeUnmount(() => {
 								</audio>
 							</div>
 						</div>
-						<iframe v-else-if="previewFile.previewType === 'pdf' || previewFile.previewType === 'document'" :src="previewFile.previewUrl" class="h-[75vh] w-full border-0" title="Preview dokumen" @load="handlePreviewLoaded" />
+						<iframe v-else-if="previewFile.previewType === 'pdf' || previewFile.previewType === 'document'" :src="previewFile.previewUrl" class="h-[75vh] w-full border-0" :title="t('preview.document')" @load="handlePreviewLoaded" />
 						<div v-else class="grid min-h-[420px] place-items-center px-6 text-center text-sm text-[#5f6368] dark:text-slate-400">
 							<div>
 								<div class="mx-auto grid size-16 place-items-center rounded-full bg-[#e8f0fe] text-[#1a73e8] dark:bg-slate-800">
 									<IconPlayerPlay :size="28" :stroke="1.8" />
 								</div>
-								<p class="mt-4">Preview belum tersedia untuk tipe file ini.</p>
+								<p class="mt-4">{{ t('preview.notAvailable') }}</p>
 							</div>
 						</div>
 					</div>

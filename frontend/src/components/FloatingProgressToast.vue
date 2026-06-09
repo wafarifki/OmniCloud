@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
 	IconArrowRight,
 	IconCheck,
@@ -15,6 +16,8 @@ import {
 	IconUpload,
 	IconX,
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
 	uploads: { type: Array, required: true },
@@ -76,26 +79,26 @@ const toastTitle = computed(() => {
 	const type = latestTask.type || 'upload';
 	const taskCount = latestTask.itemCount || 1;
 	const labels = {
-		upload: 'Mengupload',
-		download: 'Mengunduh',
-		'create-folder': 'Membuat',
-		rename: 'Mengganti nama',
-		delete: 'Menghapus',
+		upload: t('upload.uploading'),
+		download: t('upload.downloading'),
+		'create-folder': t('upload.creating'),
+		rename: t('upload.renaming'),
+		delete: t('upload.deleting'),
 	};
 	const targetKind = latestTask.targetKind || 'item';
 
 	if (['create-folder', 'rename', 'delete'].includes(type)) {
-		return `${labels[type] || 'Memproses'} ${taskCount} ${targetKind}`;
+		return `${labels[type] || t('upload.processing')} ${taskCount} ${targetKind}`;
 	}
 
-	return `${labels[type] || 'Memproses'} ${taskCount} item`;
+	return `${labels[type] || t('upload.processing')} ${taskCount} ${t('upload.item')}`;
 });
 
 const summaryText = computed(() => {
-	if (failedCount.value) return `${failedCount.value} gagal`;
-	if (activeCount.value) return 'Kurang dari satu menit lagi';
-	if (completedCount.value === visibleUploads.value.length) return 'Selesai';
-	return 'Menunggu proses';
+	if (failedCount.value) return t('upload.failed', { count: failedCount.value });
+	if (activeCount.value) return t('upload.lessThanMinute');
+	if (completedCount.value === visibleUploads.value.length) return t('upload.completed');
+	return t('upload.waiting');
 });
 
 function closeToast() {
@@ -106,13 +109,13 @@ function closeToast() {
 function formatStatus(upload) {
 	if (upload.error) return upload.error;
 	const statusLabels = {
-		pending: 'Menunggu',
-		uploading: 'Mengupload',
-		downloading: 'Mengunduh',
-		processing: 'Memproses di server',
-		completed: 'Selesai',
-		failed: 'Gagal',
-		cancelled: 'Dibatalkan',
+		pending: t('upload.waiting'),
+		uploading: t('upload.uploading'),
+		downloading: t('upload.downloading'),
+		processing: t('upload.processing'),
+		completed: t('upload.completed'),
+		failed: t('upload.failed', { count: 1 }),
+		cancelled: t('upload.cancelled'),
 	};
 	return statusLabels[upload.status] || upload.status;
 }
@@ -138,10 +141,10 @@ function iconFor(upload) {
 		<header class="flex h-[54px] items-center justify-between gap-3 px-5 text-[#202124] dark:text-slate-100">
 			<strong class="text-base font-medium">{{ toastTitle }}</strong>
 			<div class="flex items-center gap-2">
-				<button type="button" class="grid size-8 place-items-center rounded-full text-[#202124] transition hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-800" :title="isMinimized ? 'Tampilkan' : 'Minimize'" @click="isMinimized = !isMinimized">
+				<button type="button" class="grid size-8 place-items-center rounded-full text-[#202124] transition hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-800" :title="isMinimized ? t('upload.expand') : t('upload.minimize')" @click="isMinimized = !isMinimized">
 					<component :is="isMinimized ? IconChevronUp : IconChevronDown" :size="20" :stroke="2.2" />
 				</button>
-				<button type="button" class="grid size-8 place-items-center rounded-full text-[#202124] transition hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-800" title="Tutup" @click="closeToast">
+				<button type="button" class="grid size-8 place-items-center rounded-full text-[#202124] transition hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-800" :title="t('upload.dismiss')" @click="closeToast">
 					<IconX :size="22" :stroke="2.2" />
 				</button>
 			</div>
@@ -168,20 +171,20 @@ function iconFor(upload) {
 						<p class="truncate text-xs text-[#7b8087] dark:text-slate-400">{{ formatStatus(upload) }}</p>
 					</div>
 					<div class="grid place-items-end">
-						<button v-if="canCancel(upload)" type="button" class="relative grid size-7 place-items-center rounded-full text-[#5f6368] transition hover:bg-[#eef2f7] dark:text-slate-300 dark:hover:bg-slate-800" title="Batalkan proses" @click="emit('close-item', upload.id)">
+						<button v-if="canCancel(upload)" type="button" class="relative grid size-7 place-items-center rounded-full text-[#5f6368] transition hover:bg-[#eef2f7] dark:text-slate-300 dark:hover:bg-slate-800" :title="t('upload.cancel')" @click="emit('close-item', upload.id)">
 							<IconLoader2 :size="22" :stroke="2" class="absolute animate-spin text-[#1a73e8] transition-opacity group-hover:opacity-0" />
 							<IconX :size="18" :stroke="2.2" class="text-[#c5221f] opacity-0 transition-opacity group-hover:opacity-100" />
 						</button>
 						<IconLoader2 v-else-if="upload.status !== 'completed' && upload.status !== 'failed' && upload.status !== 'cancelled'" :size="22" :stroke="2" class="animate-spin text-[#1a73e8]" />
-						<button v-else-if="upload.status === 'completed'" type="button" class="relative grid size-7 place-items-center rounded-full text-[#5f6368] transition hover:bg-[#eef2f7] dark:text-slate-300 dark:hover:bg-slate-800" title="Hapus item" @click="emit('close-item', upload.id)">
+						<button v-else-if="upload.status === 'completed'" type="button" class="relative grid size-7 place-items-center rounded-full text-[#5f6368] transition hover:bg-[#eef2f7] dark:text-slate-300 dark:hover:bg-slate-800" :title="t('upload.dismiss')" @click="emit('close-item', upload.id)">
 							<IconCheck :size="22" :stroke="2.2" class="absolute text-[#188038] transition-opacity group-hover:opacity-0" />
 							<IconFilter2X :size="18" :stroke="2.2" class="opacity-0 transition-opacity group-hover:opacity-100" />
 						</button>
-						<button v-else-if="upload.status === 'cancelled'" type="button" class="relative grid size-7 place-items-center rounded-full text-[#5f6368] transition hover:bg-[#eef2f7] dark:text-slate-300 dark:hover:bg-slate-800" title="Hapus item" @click="emit('close-item', upload.id)">
+						<button v-else-if="upload.status === 'cancelled'" type="button" class="relative grid size-7 place-items-center rounded-full text-[#5f6368] transition hover:bg-[#eef2f7] dark:text-slate-300 dark:hover:bg-slate-800" :title="t('upload.dismiss')" @click="emit('close-item', upload.id)">
 							<IconX :size="20" :stroke="2.2" class="absolute text-[#c5221f] transition-opacity group-hover:opacity-0" />
 							<IconFilter2X :size="18" :stroke="2.2" class="opacity-0 transition-opacity group-hover:opacity-100" />
 						</button>
-						<button v-else type="button" class="grid size-7 place-items-center rounded-full text-[#5f6368] transition hover:bg-[#eef2f7] dark:text-slate-300 dark:hover:bg-slate-800" title="Hapus item" @click="emit('close-item', upload.id)">
+						<button v-else type="button" class="grid size-7 place-items-center rounded-full text-[#5f6368] transition hover:bg-[#eef2f7] dark:text-slate-300 dark:hover:bg-slate-800" :title="t('upload.dismiss')" @click="emit('close-item', upload.id)">
 							<IconFilter2X :size="18" :stroke="2.2" />
 						</button>
 					</div>

@@ -1,4 +1,5 @@
 <script setup>
+import { useI18n } from 'vue-i18n';
 import { IconExternalLink, IconX } from '@tabler/icons-vue';
 
 import dimarTarmiziPhoto from '../assets/dimar-tarmizi.jpg';
@@ -10,6 +11,8 @@ defineProps({
 
 const emit = defineEmits(['close']);
 
+const { t } = useI18n();
+
 function closeModal() {
 	emit('close');
 }
@@ -19,13 +22,13 @@ function closeModal() {
 	<Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
 		<div v-if="open" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 px-4 py-8 backdrop-blur-sm" @click.self="closeModal">
 			<div class="relative flex max-h-[calc(100vh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-[28px] border border-[#dfe6f1] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] sm:max-h-[calc(100vh-4rem)] sm:rounded-[30px] dark:border-slate-700 dark:bg-slate-900 dark:shadow-[0_28px_80px_rgba(2,6,23,0.65)]">
-				<button type="button" class="absolute right-4 top-4 z-10 grid size-10 place-items-center rounded-full text-[#5f6368] transition hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10" aria-label="Tutup profil" @click="closeModal">
+				<button type="button" class="absolute right-4 top-4 z-10 grid size-10 place-items-center rounded-full text-[#5f6368] transition hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10" :aria-label="t('common.close')" @click="closeModal">
 					<IconX :size="20" :stroke="2" />
 				</button>
 
 				<div class="border-b border-[#eef2f7] p-6 dark:border-slate-800">
-					<h3 class="text-2xl font-semibold text-[#202124] dark:text-slate-100">Kredit</h3>
-					<p class="mt-1 text-sm leading-6 text-[#5f6368] dark:text-slate-400">Tentang pembuat OmniCloud</p>
+					<h3 class="text-2xl font-semibold text-[#202124] dark:text-slate-100">{{ t('profile.title') }}</h3>
+					<p class="mt-1 text-sm leading-6 text-[#5f6368] dark:text-slate-400">{{ t('profile.subtitle') }}</p>
 				</div>
 
 				<div class="space-y-5 overflow-y-auto p-5 sm:p-6 dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_58%)]">
@@ -38,9 +41,9 @@ function closeModal() {
 					<div class="rounded-[26px] border border-[#e7edf6] bg-[#f8fafd] p-4 dark:border-slate-800 dark:bg-slate-800/70">
 						<div class="mb-3 flex items-center justify-between gap-3">
 							<div>
-								<h4 class="text-sm font-semibold text-[#202124] dark:text-slate-100">Mari Kita Terhubung</h4>
+								<h4 class="text-sm font-semibold text-[#202124] dark:text-slate-100">{{ t('profile.letsConnect') }}</h4>
 								<p class="mt-1 text-xs leading-5 text-[#5f6368] dark:text-slate-400">
-									Ikuti perjalanan, karya, dan aktivitas terbaru saya melalui kanal resmi berikut
+									{{ t('profile.letsConnectDesc') }}
 								</p>
 							</div>
 						</div>
@@ -75,11 +78,11 @@ function closeModal() {
 
 					<div class="flex flex-col items-start gap-3 rounded-[24px] border border-[#e7edf6] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-800/60">
 						<div>
-							<p class="text-sm font-semibold text-[#202124] dark:text-slate-100">Open Source di GitHub</p>
-							<p class="mt-1 text-xs text-[#5f6368] dark:text-slate-400">Made with ❤️ in Indonesia</p>
+							<p class="text-sm font-semibold text-[#202124] dark:text-slate-100">{{ t('profile.openSource') }}</p>
+							<p class="mt-1 text-xs text-[#5f6368] dark:text-slate-400">{{ t('profile.madeWith') }}</p>
 						</div>
 						<a href="https://github.com/dimartarmizi/OmniCloud" target="_blank" rel="noreferrer" class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1a73e8] px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(26,115,232,0.24)] transition hover:bg-[#1765cc] sm:w-auto dark:bg-[#3b82f6] dark:hover:bg-[#2563eb]">
-							<span>Link GitHub</span>
+							<span>{{ t('profile.githubLink') }}</span>
 							<IconExternalLink :size="16" :stroke="2" />
 						</a>
 					</div>

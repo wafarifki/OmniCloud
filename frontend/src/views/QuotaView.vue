@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useI18n } from 'vue-i18n';
 import {
 	IconChevronDown,
 	IconCloud,
@@ -19,6 +20,7 @@ import TruncateMarquee from '../components/TruncateMarquee.vue';
 import { useAccountManagementStore } from '../stores/accountManagement';
 import { api } from '../services/api';
 
+const { t } = useI18n();
 const accountStore = useAccountManagementStore();
 const { accounts, isLoading, error, isDisconnectingId } = storeToRefs(accountStore);
 
@@ -59,36 +61,36 @@ const accountPalette = [
 	},
 ];
 
-const providerConnectOptions = [
+const providerConnectOptions = computed(() => [
 	{
 		key: 'google_drive',
-		label: 'Google Drive',
-		busyLabel: 'Menghubungkan Google...',
+		label: t('providers.googleDrive'),
+		busyLabel: t('storage.connectingProvider', { provider: 'Google' }),
 		icon: googleDriveLogo,
 		action: connectGoogleDrive,
 	},
 	{
 		key: 'onedrive',
-		label: 'OneDrive',
-		busyLabel: 'Menghubungkan OneDrive...',
+		label: t('providers.oneDrive'),
+		busyLabel: t('storage.connectingProvider', { provider: 'OneDrive' }),
 		icon: oneDriveLogo,
 		action: connectOneDrive,
 	},
 	{
 		key: 'dropbox',
-		label: 'Dropbox',
-		busyLabel: 'Menghubungkan Dropbox...',
+		label: t('providers.dropbox'),
+		busyLabel: t('storage.connectingProvider', { provider: 'Dropbox' }),
 		icon: dropboxLogo,
 		action: connectDropbox,
 	},
 	{
 		key: 'mega',
-		label: 'MEGA',
-		busyLabel: 'Menghubungkan MEGA...',
+		label: t('providers.mega'),
+		busyLabel: t('storage.connectingProvider', { provider: 'MEGA' }),
 		icon: megaLogo,
 		action: openMegaModal,
 	},
-];
+]);
 
 const storageSegments = computed(() => {
 	const total = totalSpace.value || 1;
@@ -188,10 +190,10 @@ function isAccountActionBusy(account) {
 
 function accountActionLabel(account) {
 	if (isReconnectable(account)) {
-		return connectingProvider.value === account.provider ? 'Menghubungkan...' : 'Connect';
+		return connectingProvider.value === account.provider ? t('storage.connecting') : t('storage.connect');
 	}
 
-	return isDisconnectingId.value === account.id ? 'Memutuskan...' : 'Disconnect';
+	return isDisconnectingId.value === account.id ? t('storage.disconnecting') : t('storage.disconnect');
 }
 
 async function reconnectAccount(account) {
@@ -215,7 +217,7 @@ async function reconnectAccount(account) {
 		return;
 	}
 
-	actionError.value = `Provider ${providerLabel(account.provider)} belum mendukung reconnect otomatis.`;
+	actionError.value = t('storage.reconnectNotSupported', { provider: providerLabel(account.provider) });
 }
 
 async function handleAccountAction(account) {
@@ -299,7 +301,7 @@ async function connectMega(payload) {
 }
 
 async function disconnectAccount(account) {
-	const confirmed = window.confirm(`Disconnect akun ${account.email}?`);
+	const confirmed = window.confirm(t('storage.disconnectConfirm', { email: account.email }));
 	if (!confirmed) return;
 
 	actionError.value = '';
@@ -335,20 +337,20 @@ onMounted(loadPage);
 		<div class="min-h-[calc(100vh-84px)] rounded-[24px] bg-white px-4 py-[18px] pb-6 text-[#202124] dark:bg-slate-800 dark:text-slate-100 sm:px-6">
 			<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div>
-					<h1 class="text-2xl font-normal">Penyimpanan</h1>
-					<p class="mt-1 text-sm text-[#5f6368] dark:text-slate-400">Lihat semua akun cloud, kuota masing-masing, lalu hubungkan atau putuskan akun.</p>
+					<h1 class="text-2xl font-normal">{{ t('storage.title') }}</h1>
+					<p class="mt-1 text-sm text-[#5f6368] dark:text-slate-400">{{ t('storage.subtitle') }}</p>
 				</div>
 
 				<div class="flex flex-wrap items-center gap-3">
 					<button type="button" class="inline-flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-4 py-2 text-[#1a73e8] disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400" :disabled="isSyncing" @click="syncNow">
 						<IconRefresh :size="18" :stroke="2" :class="isSyncing ? 'animate-spin' : ''" />
-						<span>{{ isSyncing ? 'Sinkronisasi...' : 'Sinkronkan sekarang' }}</span>
+						<span>{{ isSyncing ? t('storage.syncing') : t('storage.syncNow') }}</span>
 					</button>
 
 					<div class="relative">
 						<button type="button" class="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-4 py-2 text-white disabled:opacity-60" :disabled="Boolean(connectingProvider)" @click="toggleConnectMenu">
 							<IconLinkPlus :size="18" :stroke="2" />
-							<span>{{ connectingProvider ? 'Menghubungkan...' : 'Hubungkan' }}</span>
+							<span>{{ connectingProvider ? t('storage.connecting') : t('storage.connect') }}</span>
 							<IconChevronDown :size="16" :stroke="2" class="transition" :class="isConnectMenuOpen ? 'rotate-180' : ''" />
 						</button>
 
@@ -369,18 +371,18 @@ onMounted(loadPage);
 							<IconCloud :size="24" :stroke="1.8" />
 						</div>
 						<div>
-							<p class="text-sm text-[#5f6368] dark:text-slate-400">Total penyimpanan</p>
+							<p class="text-sm text-[#5f6368] dark:text-slate-400">{{ t('storage.totalStorage') }}</p>
 							<strong class="text-xl">{{ formatBytes(totalUsed) }} / {{ formatBytes(totalSpace) }}</strong>
 						</div>
 					</div>
 
 					<div class="min-w-[220px] rounded-[22px] bg-[#f8fafd] px-4 py-3 text-sm dark:bg-slate-800/80">
 						<div class="flex items-center justify-between gap-3">
-							<span class="text-[#5f6368] dark:text-slate-400">Ruang terpakai</span>
+							<span class="text-[#5f6368] dark:text-slate-400">{{ t('storage.usedSpace') }}</span>
 							<strong>{{ formatBytes(totalUsed) }}</strong>
 						</div>
 						<div class="mt-2 flex items-center justify-between gap-3">
-							<span class="text-[#5f6368] dark:text-slate-400">Ruang kosong</span>
+							<span class="text-[#5f6368] dark:text-slate-400">{{ t('storage.freeSpace') }}</span>
 							<strong>{{ formatBytes(totalFree) }}</strong>
 						</div>
 					</div>
@@ -407,11 +409,11 @@ onMounted(loadPage);
 							<div class="grid gap-1 text-xs">
 								<span class="inline-flex items-center gap-2">
 									<span class="size-2.5 rounded-full" :class="account.palette.used" />
-									Terpakai
+									{{ t('storage.used') }}
 								</span>
 								<span class="inline-flex items-center gap-2 text-[#5f6368] dark:text-slate-400">
 									<span class="size-2.5 rounded-full" :class="account.palette.free" />
-									Kosong
+									{{ t('storage.free') }}
 								</span>
 							</div>
 						</div>
@@ -425,7 +427,7 @@ onMounted(loadPage);
 
 						<div class="mt-3 flex items-center justify-between gap-3 text-sm">
 							<span class="text-[#5f6368] dark:text-slate-400">{{ formatBytes(account.used) }} / {{ formatBytes(account.total_space) }}</span>
-							<span class="font-medium" :class="account.palette.text">{{ formatBytes(account.free) }} kosong</span>
+							<span class="font-medium" :class="account.palette.text">{{ formatBytes(account.free) }} {{ t('storage.empty') }}</span>
 						</div>
 
 						<div class="mt-4 flex items-center justify-between gap-3">
@@ -446,9 +448,9 @@ onMounted(loadPage);
 			<p v-if="actionError || error" class="mb-4 rounded-2xl bg-[#fce8e6] px-4 py-3 text-sm text-[#c5221f] dark:bg-red-950/40 dark:text-red-300">{{ actionError || error }}</p>
 
 			<div v-if="!accounts.length && !isLoading" class="rounded-[24px] border border-dashed border-[#dadce0] bg-white p-6 text-center text-[#5f6368] dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-				Belum ada akun terhubung.
-			</div>
+				{{ t('storage.noAccounts') }}
 
+			</div>
 			<MegaConnectModal v-if="isMegaModalOpen" :is-connecting="connectingProvider === 'mega'" :error="actionError" @close="closeMegaModal" @connect="connectMega" />
 		</div>
 	</DriveShell>

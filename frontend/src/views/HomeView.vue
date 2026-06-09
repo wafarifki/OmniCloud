@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useI18n } from 'vue-i18n';
 import {
 	IconFileDescription,
 	IconInfoCircle,
@@ -14,6 +15,8 @@ import DriveShell from '../components/DriveShell.vue';
 import TruncateMarquee from '../components/TruncateMarquee.vue';
 import { useFileTreeStore } from '../stores/fileTree';
 import { useAccountManagementStore } from '../stores/accountManagement';
+
+const { t } = useI18n();
 
 const fileTreeStore = useFileTreeStore();
 const accountStore = useAccountManagementStore();
@@ -43,7 +46,7 @@ function formatBytes(value) {
 }
 
 function formatDate(value) {
-	if (!value) return 'Baru saja';
+	if (!value) return t('home.justNow');
 	return new Intl.DateTimeFormat('id-ID', {
 		day: 'numeric',
 		month: 'short',
@@ -78,7 +81,7 @@ onMounted(loadPage);
 	<DriveShell current-section="home">
 		<div class="min-h-[calc(100vh-84px)] rounded-[24px] bg-white px-4 py-[18px] pb-7 text-[#202124] dark:bg-slate-800 dark:text-slate-100 sm:px-6">
 			<div class="mb-[18px] flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-				<h1 class="m-0 text-2xl font-normal text-[#202124] dark:text-slate-100">Beranda</h1>
+				<h1 class="m-0 text-2xl font-normal text-[#202124] dark:text-slate-100">{{ t('home.title') }}</h1>
 
 				<div class="flex items-center gap-2">
 					<button type="button" class="grid size-9 place-items-center rounded-full text-[#5f6368] hover:bg-black/5 dark:text-slate-400 dark:hover:bg-white/8">
@@ -92,18 +95,18 @@ onMounted(loadPage);
 
 			<section class="mb-7 grid gap-5 rounded-[20px] bg-gradient-to-b from-[#e8f0fe] to-[#f1f6ff] p-7 dark:from-slate-900 dark:to-slate-800 sm:grid-cols-[minmax(0,1.6fr)_280px]">
 				<div>
-					<p class="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-[#1a73e8]">Cloud accounts</p>
-					<h2 class="mb-2 text-[28px] font-medium text-[#202124] dark:text-slate-100">Hubungkan akun dan lihat seluruh file seperti tampilan Drive.</h2>
+					<p class="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-[#1a73e8]">{{ t('home.subtitle') }}</p>
+					<h2 class="mb-2 text-[28px] font-medium text-[#202124] dark:text-slate-100">{{ t('home.heroTitle') }}</h2>
 					<p class="text-[#5f6368] dark:text-slate-400">
-						Sinkronisasi metadata akun cloud asli dan tampilkan daftar file dalam antarmuka yang menyerupai Google Drive.
+						{{ t('home.heroDesc') }}
 					</p>
 
 					<div class="mt-[18px] flex flex-wrap gap-3">
 						<RouterLink to="/my-drive" class="inline-flex h-10 items-center rounded-full border border-[#1a73e8] bg-[#1a73e8] px-[18px] text-white disabled:opacity-60">
-							Buka Drive Saya
+							{{ t('nav.myDrive') }}
 						</RouterLink>
 						<RouterLink to="/quota" class="inline-flex h-10 items-center rounded-full border border-[#dadce0] bg-white px-[18px] text-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">
-							Buka Penyimpanan
+							{{ t('nav.storage') }}
 						</RouterLink>
 					</div>
 				</div>
@@ -114,23 +117,23 @@ onMounted(loadPage);
 					</div>
 					<div>
 						<strong>{{ formatBytes(totalUsed) }}</strong>
-						<p class="text-[#5f6368] dark:text-slate-400">dari {{ formatBytes(totalSpace) }} digunakan</p>
+						<p class="text-[#5f6368] dark:text-slate-400">{{ t('sidebar.storageUsed', { used: formatBytes(totalUsed), total: formatBytes(totalSpace) }) }}</p>
 					</div>
 				</div>
 			</section>
 
 			<section class="mt-[26px]">
 				<div class="mb-3 flex items-center justify-between gap-3">
-					<h2 class="m-0 text-base font-medium text-[#202124] dark:text-slate-100">File terbaru</h2>
-					<button type="button" class="rounded-full border border-[#dadce0] bg-white px-3.5 py-2 text-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">Disarankan</button>
+					<h2 class="m-0 text-base font-medium text-[#202124] dark:text-slate-100">{{ t('home.recentFiles') }}</h2>
+					<button type="button" class="rounded-full border border-[#dadce0] bg-white px-3.5 py-2 text-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">{{ t('home.viewAll') }}</button>
 				</div>
 
 				<div class="overflow-hidden rounded-2xl border border-[#e0e3e7] dark:border-slate-700">
 					<div class="grid min-h-11 grid-cols-[minmax(220px,2fr)_1.1fr_1fr_140px] items-center gap-3 bg-[#f8fafd] px-[18px] text-[13px] text-[#5f6368] dark:bg-slate-900/70 dark:text-slate-400 max-md:grid-cols-[minmax(180px,1.8fr)_1fr_1fr]">
-						<span>Nama</span>
-						<span>Pemilik</span>
-						<span>Terakhir diubah</span>
-						<span class="max-md:hidden">Ukuran file</span>
+						<span>{{ t('home.fileName') }}</span>
+						<span>{{ t('home.fileOwner') }}</span>
+						<span>{{ t('home.fileModified') }}</span>
+						<span class="max-md:hidden">{{ t('home.fileSize') }}</span>
 					</div>
 
 					<div v-for="file in quickFiles" :key="file.id" class="grid min-h-[52px] grid-cols-[minmax(0,2fr)_minmax(0,1.1fr)_minmax(0,1fr)_140px] items-center gap-3 border-t border-[#eceff1] px-[18px] dark:border-slate-700 max-md:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,1fr)]">
@@ -148,7 +151,7 @@ onMounted(loadPage);
 						<span class="text-[#5f6368] dark:text-slate-400 max-md:hidden">{{ formatBytes(file.size) }}</span>
 					</div>
 
-					<div v-if="!quickFiles.length && !isLoading" class="p-[18px] text-[#5f6368] dark:text-slate-400">Belum ada file terbaru.</div>
+					<div v-if="!quickFiles.length && !isLoading" class="p-[18px] text-[#5f6368] dark:text-slate-400">{{ t('home.noFiles') }}</div>
 				</div>
 			</section>
 		</div>

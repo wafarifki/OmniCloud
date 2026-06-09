@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useI18n } from 'vue-i18n';
 import {
 	IconCloudDataConnection,
 	IconChevronRight,
@@ -27,10 +28,15 @@ import {
 	IconHomeFilled,
 	IconStarFilled,
 	IconUserFilled,
+	IconLanguage,
 } from '@tabler/icons-vue';
 import { useAccountManagementStore } from '../stores/accountManagement';
+import { useSettingsStore } from '../stores/settings';
 import HelpModal from './HelpModal.vue';
 import ProfileModal from './ProfileModal.vue';
+import LanguageModal from './LanguageModal.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
 	currentSection: { type: String, required: true },
@@ -42,15 +48,21 @@ const isCreateMenuOpen = ref(false);
 const isMobileNavOpen = ref(false);
 const isHelpModalOpen = ref(false);
 const isProfileModalOpen = ref(false);
+const isLanguageModalOpen = ref(false);
 const createMenuRef = ref(null);
 const theme = ref('light');
 const accountStore = useAccountManagementStore();
+const settingsStore = useSettingsStore();
 const { accounts } = storeToRefs(accountStore);
 
 const totalUsed = computed(() => accounts.value.reduce((sum, account) => sum + Number(account.used_space || 0), 0));
 const totalSpace = computed(() => accounts.value.reduce((sum, account) => sum + Number(account.total_space || 0), 0));
 const storagePercent = computed(() => (totalSpace.value ? Math.min(100, (totalUsed.value / totalSpace.value) * 100) : 0));
-const storageLabel = computed(() => `${formatBytes(totalUsed.value)} dari ${formatBytes(totalSpace.value)} telah digunakan`);
+const storageLabel = computed(() => {
+	const usedFormatted = formatBytes(totalUsed.value);
+	const totalFormatted = formatBytes(totalSpace.value);
+	return t('sidebar.storageUsed', { used: usedFormatted, total: totalFormatted });
+});
 
 function formatBytes(value) {
 	if (!value) return '0 B';
@@ -92,6 +104,14 @@ function closeHelpModal() {
 	isHelpModalOpen.value = false;
 }
 
+function openLanguageModal() {
+	isLanguageModalOpen.value = true;
+}
+
+function closeLanguageModal() {
+	isLanguageModalOpen.value = false;
+}
+
 function runCreateAction(action) {
 	isCreateMenuOpen.value = false;
 	isMobileNavOpen.value = false;
@@ -111,6 +131,10 @@ function handleDocumentClick(event) {
 function handleWindowKeydown(event) {
 	if (event.key !== 'Escape') {
 		return;
+	}
+
+	if (isLanguageModalOpen.value) {
+		closeLanguageModal();
 	}
 
 	if (isHelpModalOpen.value) {
@@ -146,14 +170,14 @@ onBeforeUnmount(() => {
 	window.removeEventListener('keydown', handleWindowKeydown);
 });
 
-const navItems = [
-	{ id: 'home', label: 'Beranda', icon: IconHome, activeIcon: IconHomeFilled, to: '/' },
-	{ id: 'drive', label: 'Drive Saya', icon: IconFolder, activeIcon: IconFolderFilled, to: '/my-drive' },
-	{ id: 'shared', label: 'Dibagikan', icon: IconUsers, activeIcon: IconUserFilled, to: '/my-drive' },
-	{ id: 'recent', label: 'Terbaru', icon: IconClockHour4, activeIcon: IconClockHour4Filled, to: '/my-drive' },
-	{ id: 'starred', label: 'Berbintang', icon: IconStar, activeIcon: IconStarFilled, to: '/my-drive' },
-	{ id: 'storage', label: 'Penyimpanan', icon: IconCloud, activeIcon: IconCloudFilled, to: '/quota' },
-];
+const navItems = computed(() => [
+	{ id: 'home', label: t('nav.home'), icon: IconHome, activeIcon: IconHomeFilled, to: '/' },
+	{ id: 'drive', label: t('nav.myDrive'), icon: IconFolder, activeIcon: IconFolderFilled, to: '/my-drive' },
+	{ id: 'shared', label: t('nav.shared'), icon: IconUsers, activeIcon: IconUserFilled, to: '/my-drive' },
+	{ id: 'recent', label: t('nav.recent'), icon: IconClockHour4, activeIcon: IconClockHour4Filled, to: '/my-drive' },
+	{ id: 'starred', label: t('nav.starred'), icon: IconStar, activeIcon: IconStarFilled, to: '/my-drive' },
+	{ id: 'storage', label: t('nav.storage'), icon: IconCloud, activeIcon: IconCloudFilled, to: '/quota' },
+]);
 
 const profileLinks = [
 	{ id: 'website', label: 'Website', href: 'https://tarmizi.id' },
@@ -169,14 +193,15 @@ const profileLinks = [
 	<div class="min-h-screen bg-[#f8fafd] text-[#202124] dark:bg-slate-900 dark:text-slate-100">
 		<HelpModal :open="isHelpModalOpen" @close="closeHelpModal" />
 		<ProfileModal :open="isProfileModalOpen" :profile-links="profileLinks" @close="closeProfileModal" />
+		<LanguageModal :open="isLanguageModalOpen" @close="closeLanguageModal" />
 
 		<header class="grid h-16 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-3 sm:gap-4 sm:px-4 lg:grid-cols-[244px_minmax(320px,720px)_1fr] lg:gap-3 lg:pr-4">
 			<div class="flex min-w-0 items-center gap-2 lg:gap-3">
-				<button type="button" class="grid size-10 shrink-0 place-items-center rounded-full text-[#5f6368] transition hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10 lg:hidden" data-mobile-nav-toggle aria-label="Buka menu navigasi" @click.stop="toggleMobileNav">
+				<button type="button" class="grid size-10 shrink-0 place-items-center rounded-full text-[#5f6368] transition hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10 lg:hidden" data-mobile-nav-toggle :aria-label="t('header.openNav')" @click.stop="toggleMobileNav">
 					<IconMenu2 :size="22" :stroke="2" />
 				</button>
 				<div class="hidden items-center gap-2 lg:flex">
-					<button type="button" class="grid size-11 place-items-center rounded-2xl bg-[#1a73e8] text-white transition hover:scale-[1.03] hover:bg-[#1765cc] focus:outline-none focus:ring-4 focus:ring-[#1a73e8]/20 dark:bg-[#3b82f6] dark:text-white dark:hover:bg-[#2563eb] dark:focus:ring-blue-400/20" aria-label="Buka profil creator" @click="openProfileModal">
+					<button type="button" class="grid size-11 place-items-center rounded-2xl bg-[#1a73e8] text-white transition hover:scale-[1.03] hover:bg-[#1765cc] focus:outline-none focus:ring-4 focus:ring-[#1a73e8]/20 dark:bg-[#3b82f6] dark:text-white dark:hover:bg-[#2563eb] dark:focus:ring-blue-400/20" :aria-label="t('header.openProfile')" @click="openProfileModal">
 						<IconCloudDataConnection :size="24" :stroke="2" />
 					</button>
 					<div class="text-[22px] font-medium text-[#5f6368] dark:text-slate-300">OmniCloud</div>
@@ -187,21 +212,24 @@ const profileLinks = [
 				<span class="grid place-items-center text-[#5f6368] dark:text-slate-400">
 					<IconSearch :size="18" :stroke="2" />
 				</span>
-				<input type="search" placeholder="Telusuri di OmniCloud" class="w-full min-w-0 border-0 bg-transparent text-sm text-[#202124] outline-none placeholder:text-[#5f6368] dark:text-slate-100 dark:placeholder:text-slate-400 sm:text-base" />
+				<input type="search" :placeholder="t('header.searchPlaceholder')" class="w-full min-w-0 border-0 bg-transparent text-sm text-[#202124] outline-none placeholder:text-[#5f6368] dark:text-slate-100 dark:placeholder:text-slate-400 sm:text-base" />
 				<span class="grid place-items-center text-[#5f6368] dark:text-slate-400">
 					<IconAdjustmentsHorizontal :size="18" :stroke="2" />
 				</span>
 			</div>
 
 			<div class="hidden items-center justify-end gap-2 lg:flex">
-				<button type="button" class="hidden size-10 place-items-center rounded-full text-[#5f6368] hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10 sm:grid" @click="toggleTheme">
+				<button type="button" class="hidden size-10 place-items-center rounded-full text-[#5f6368] hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10 sm:grid" :title="t('header.toggleTheme')" @click="toggleTheme">
 					<IconMoon v-if="theme !== 'dark'" :size="18" :stroke="2" />
 					<IconSun v-else :size="18" :stroke="2" />
 				</button>
-				<button type="button" class="hidden size-10 place-items-center rounded-full text-[#5f6368] hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10 sm:grid" aria-label="Buka bantuan" @click="openHelpModal">
+				<button type="button" class="hidden size-10 place-items-center rounded-full text-[#5f6368] hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10 sm:grid" :title="t('common.language')" @click="openLanguageModal">
+					<IconLanguage :size="18" :stroke="2" />
+				</button>
+				<button type="button" class="hidden size-10 place-items-center rounded-full text-[#5f6368] hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10 sm:grid" :aria-label="t('header.openHelp')" @click="openHelpModal">
 					<IconHelp :size="18" :stroke="2" />
 				</button>
-				<button type="button" class="hidden size-10 place-items-center rounded-full text-[#5f6368] hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10 sm:grid">
+				<button type="button" class="hidden size-10 place-items-center rounded-full text-[#5f6368] hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10 sm:grid" :title="t('common.settings')">
 					<IconSettings :size="18" :stroke="2" />
 				</button>
 			</div>
@@ -217,7 +245,7 @@ const profileLinks = [
 							</span>
 							<span class="text-xl font-medium text-[#5f6368] dark:text-slate-300">OmniCloud</span>
 						</div>
-						<button type="button" class="grid size-10 place-items-center rounded-full text-[#5f6368] transition hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10" aria-label="Tutup menu navigasi" @click="closeMobileNav">
+						<button type="button" class="grid size-10 place-items-center rounded-full text-[#5f6368] transition hover:bg-black/5 dark:text-slate-300 dark:hover:bg-white/10" :aria-label="t('header.closeNav')" @click="closeMobileNav">
 							<IconX :size="20" :stroke="2" />
 						</button>
 					</div>
@@ -225,20 +253,20 @@ const profileLinks = [
 					<div ref="createMenuRef" class="relative mb-4">
 						<button type="button" class="flex h-13 w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#1a73e8] to-[#4f8ff7] px-4 font-semibold text-white shadow-[0_12px_28px_rgba(26,115,232,0.28)]" @click.stop="toggleCreateMenu">
 							<IconPlus :size="22" :stroke="2" />
-							<span>Baru</span>
+							<span>{{ t('common.new') }}</span>
 						</button>
 
 						<div v-if="isCreateMenuOpen" class="absolute left-0 top-[calc(100%+10px)] z-30 w-full overflow-hidden rounded-2xl border border-[#e0e3e7] bg-white py-2 shadow-[0_12px_36px_rgba(60,64,67,0.2)] dark:border-slate-700 dark:bg-slate-800">
 							<button type="button" class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-700/70" @click="runCreateAction('new-folder')">
-								<span>Folder Baru</span>
+								<span>{{ t('sidebar.newFolder') }}</span>
 								<IconChevronRight :size="16" :stroke="2" class="text-[#5f6368] dark:text-slate-400" />
 							</button>
 							<button type="button" class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-700/70" @click="runCreateAction('upload-files')">
-								<span>Upload File</span>
+								<span>{{ t('sidebar.uploadFile') }}</span>
 								<IconChevronRight :size="16" :stroke="2" class="text-[#5f6368] dark:text-slate-400" />
 							</button>
 							<button type="button" class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-700/70" @click="runCreateAction('upload-folder')">
-								<span>Upload Folder</span>
+								<span>{{ t('sidebar.uploadFolder') }}</span>
 								<IconChevronRight :size="16" :stroke="2" class="text-[#5f6368] dark:text-slate-400" />
 							</button>
 						</div>
@@ -257,7 +285,7 @@ const profileLinks = [
 								<span class="grid size-9 place-items-center rounded-2xl bg-[#e8f0fe] text-[#1a73e8] dark:bg-blue-500/15 dark:text-blue-300">
 									<IconCloudFilled :size="18" :stroke="0" />
 								</span>
-								<span class="text-sm font-semibold">Penyimpanan</span>
+								<span class="text-sm font-semibold">{{ t('sidebar.storage') }}</span>
 							</div>
 							<span class="rounded-full bg-[#e8f0fe] px-2 py-1 text-xs font-semibold text-[#1a73e8] dark:bg-blue-500/15 dark:text-blue-300">{{ storagePercent.toFixed(0) }}%</span>
 						</div>
@@ -277,20 +305,20 @@ const profileLinks = [
 				<div ref="createMenuRef" class="relative inline-block">
 					<button type="button" class="inline-flex h-14 items-center gap-3.5 rounded-2xl bg-white px-[18px] pr-[22px] font-medium text-[#3c4043] shadow-[0_1px_3px_rgba(60,64,67,0.3),0_4px_8px_rgba(60,64,67,0.15)] dark:bg-slate-800 dark:text-slate-100 dark:shadow-[0_10px_30px_rgba(15,23,42,0.45)]" @click.stop="toggleCreateMenu">
 						<IconPlus :size="22" :stroke="2" />
-						<span>Baru</span>
+						<span>{{ t('common.new') }}</span>
 					</button>
 
 					<div v-if="isCreateMenuOpen" class="absolute left-0 top-[calc(100%+10px)] z-30 w-56 overflow-hidden rounded-2xl border border-[#e0e3e7] bg-white py-2 shadow-[0_12px_36px_rgba(60,64,67,0.2)] dark:border-slate-700 dark:bg-slate-800 dark:shadow-[0_12px_36px_rgba(15,23,42,0.45)]">
 						<button type="button" class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-700/70" @click="runCreateAction('new-folder')">
-							<span>Folder Baru</span>
+							<span>{{ t('sidebar.newFolder') }}</span>
 							<IconChevronRight :size="16" :stroke="2" class="text-[#5f6368] dark:text-slate-400" />
 						</button>
 						<button type="button" class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-700/70" @click="runCreateAction('upload-files')">
-							<span>Upload File</span>
+							<span>{{ t('sidebar.uploadFile') }}</span>
 							<IconChevronRight :size="16" :stroke="2" class="text-[#5f6368] dark:text-slate-400" />
 						</button>
 						<button type="button" class="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[#202124] hover:bg-[#f8fafd] dark:text-slate-100 dark:hover:bg-slate-700/70" @click="runCreateAction('upload-folder')">
-							<span>Upload Folder</span>
+							<span>{{ t('sidebar.uploadFolder') }}</span>
 							<IconChevronRight :size="16" :stroke="2" class="text-[#5f6368] dark:text-slate-400" />
 						</button>
 					</div>
@@ -309,7 +337,7 @@ const profileLinks = [
 							<span class="grid size-9 place-items-center rounded-2xl bg-[#e8f0fe] text-[#1a73e8] dark:bg-blue-500/15 dark:text-blue-300">
 								<IconCloud :size="18" :stroke="2" />
 							</span>
-							<span class="text-sm font-semibold">Penyimpanan</span>
+							<span class="text-sm font-semibold">{{ t('sidebar.storage') }}</span>
 						</div>
 						<span class="rounded-full bg-[#e8f0fe] px-2 py-1 text-xs font-semibold text-[#1a73e8] dark:bg-blue-500/15 dark:text-blue-300">{{ storagePercent.toFixed(0) }}%</span>
 					</div>

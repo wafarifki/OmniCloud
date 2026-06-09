@@ -47,6 +47,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_file_remote_id ON file_metadata(remote_file_id);
   CREATE UNIQUE INDEX IF NOT EXISTS idx_file_account_remote_id
     ON file_metadata(cloud_account_id, remote_file_id);
+
+  CREATE TABLE IF NOT EXISTS user_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 const accountColumns = db.prepare('PRAGMA table_info(cloud_accounts)').all();
