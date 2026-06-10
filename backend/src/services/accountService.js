@@ -40,6 +40,15 @@ export function markAccountStatus(id, status) {
 	);
 }
 
+export function updateAccountCredentials(id, credentials) {
+	const encrypted_credentials =
+		typeof credentials === 'string' ? credentials : encryptJson(credentials);
+
+	db.prepare(
+		'UPDATE cloud_accounts SET encrypted_credentials = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+	).run(encrypted_credentials, id);
+}
+
 export function deleteAccount(id) {
 	db.prepare('DELETE FROM cloud_accounts WHERE id = ?').run(id);
 }

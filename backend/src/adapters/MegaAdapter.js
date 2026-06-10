@@ -1,6 +1,7 @@
 import { Storage } from 'megajs';
 import { BaseCloudAdapter } from './BaseCloudAdapter.js';
 import { decryptJson } from '../utils/crypto.js';
+import { updateAccountCredentials } from '../services/accountService.js';
 
 function isMegaSessionError(error) {
 	return /invalid or expired user session|ESID|utype/i.test(error?.message || '');
@@ -54,10 +55,12 @@ export class MegaAdapter extends BaseCloudAdapter {
 
 				try {
 					await sessionStorage.ready;
+					await sessionStorage.getAccountInfo();
+					await this.loadFileTree(sessionStorage);
 					return sessionStorage;
 				} catch (error) {
 					sessionError = error;
-					await sessionStorage.close().catch(() => {});
+					await sessionStorage.close().catch(() => { });
 
 					if (!credentials.email || !credentials.password || !isMegaSessionError(error)) {
 						throw error;
@@ -78,6 +81,9 @@ export class MegaAdapter extends BaseCloudAdapter {
 			});
 
 			await passwordStorage.ready;
+
+			this.persistRefreshedSession(credentials, passwordStorage);
+
 			return passwordStorage;
 		})();
 
@@ -86,6 +92,32 @@ export class MegaAdapter extends BaseCloudAdapter {
 		});
 
 		return this.storagePromise;
+	}
+
+	loadFileTree(storage) {
+		return new Promise((resolve, reject) => {
+			storage.reload(true, (error) => {
+				if (error) {
+					reject(error);
+					return;
+				}
+				resolve(storage);
+			});
+		});
+	}
+
+	persistRefreshedSession(credentials, storage) {
+		try {
+			const session = storage.toJSON();
+			if (!session) return;
+
+			updateAccountCredentials(this.account.id, {
+				...credentials,
+				session,
+			});
+		} catch (error) {
+			console.warn(`Failed to persist refreshed MEGA session for ${this.account.email}:`, error?.message || error);
+		}
 	}
 
 	async ensureRemotePath(virtualPath = '/') {

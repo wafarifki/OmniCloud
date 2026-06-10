@@ -24,8 +24,8 @@ export class OneDriveAdapter extends BaseCloudAdapter {
 		};
 	}
 
-	async createAccessToken() {
-		if (this.accessTokenCache && this.accessTokenCache.expiresAt > Date.now() + 30_000) {
+	async createAccessToken(forceRefresh = false) {
+		if (!forceRefresh && this.accessTokenCache && this.accessTokenCache.expiresAt > Date.now() + 30_000) {
 			return this.accessTokenCache.token;
 		}
 
@@ -68,13 +68,24 @@ export class OneDriveAdapter extends BaseCloudAdapter {
 
 	async requestGraph(url, options = {}) {
 		const accessToken = await this.createAccessToken();
-		const response = await fetch(url, {
+		let response = await fetch(url, {
 			...options,
 			headers: {
 				Authorization: `Bearer ${accessToken}`,
 				...(options.headers || {}),
 			},
 		});
+
+		if (response.status === 401) {
+			const refreshedToken = await this.createAccessToken(true);
+			response = await fetch(url, {
+				...options,
+				headers: {
+					Authorization: `Bearer ${refreshedToken}`,
+					...(options.headers || {}),
+				},
+			});
+		}
 
 		return response;
 	}

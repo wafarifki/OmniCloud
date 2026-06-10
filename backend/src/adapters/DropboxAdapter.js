@@ -40,8 +40,8 @@ export class DropboxAdapter extends BaseCloudAdapter {
 		return credentials;
 	}
 
-	async createAccessToken() {
-		if (this.accessTokenCache && this.accessTokenCache.expiresAt > Date.now() + 30_000) {
+	async createAccessToken(forceRefresh = false) {
+		if (!forceRefresh && this.accessTokenCache && this.accessTokenCache.expiresAt > Date.now() + 30_000) {
 			return this.accessTokenCache.token;
 		}
 
@@ -73,22 +73,38 @@ export class DropboxAdapter extends BaseCloudAdapter {
 	}
 
 	async rpc(path, body = {}) {
-		const accessToken = await this.createAccessToken();
-		const response = await fetch(`https://api.dropboxapi.com/2${path}`, {
-			method: 'POST',
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(body),
+		return this.requestWithReauth(async (accessToken) => {
+			const response = await fetch(`https://api.dropboxapi.com/2${path}`, {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(body),
+			});
+
+			const payload = await response.json().catch(() => null);
+			if (!response.ok) {
+				const error = new Error(parseDropboxError(payload, 'Dropbox API request failed'));
+				error.status = response.status;
+				throw error;
+			}
+
+			return payload;
 		});
+	}
 
-		const payload = await response.json().catch(() => null);
-		if (!response.ok) {
-			throw new Error(parseDropboxError(payload, 'Dropbox API request failed'));
+	async requestWithReauth(makeRequest) {
+		let accessToken = await this.createAccessToken();
+		try {
+			return await makeRequest(accessToken);
+		} catch (error) {
+			if (error?.status !== 401) {
+				throw error;
+			}
+			accessToken = await this.createAccessToken(true);
+			return makeRequest(accessToken);
 		}
-
-		return payload;
 	}
 
 	async content(path, { args, body, contentType = 'application/octet-stream' } = {}) {

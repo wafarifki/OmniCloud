@@ -3,6 +3,41 @@ import { env } from '../config/env.js';
 import { getActiveAccounts, markAccountStatus, updateAccountStorage } from './accountService.js';
 import { createAdapter } from './adapterRegistry.js';
 import { clearFilesForAccount, replaceFilesForAccount } from './fileService.js';
+import { isAuthError, withRetry } from '../utils/providerErrors.js';
+
+async function fetchAccountSnapshot(account) {
+	return withRetry(
+		async () => {
+			const adapter = createAdapter(account);
+			const remoteFiles = await adapter.fetchStructure();
+			const storage = await adapter.getStorageSummary();
+			return { remoteFiles, storage };
+		},
+		{
+			retries: 3,
+			onRetry: (error, attempt) => {
+				console.warn(
+					`Transient sync error for ${account.email} (attempt ${attempt}), retrying:`,
+					error?.message || error,
+				);
+			},
+		},
+	);
+}
+
+function handleSyncFailure(account, error) {
+	if (isAuthError(error)) {
+		clearFilesForAccount(account.id);
+		markAccountStatus(account.id, 'invalid_token');
+		console.error(`Auth error for account ${account.email}, marked invalid_token:`, error.message);
+		return;
+	}
+
+	console.error(
+		`Transient sync failure for account ${account.email} (kept connected):`,
+		error.message,
+	);
+}
 
 let lastSyncReport = {
 	lastRunAt: null,
@@ -23,17 +58,13 @@ export async function runDeltaSync() {
 
 		for (const account of accounts) {
 			try {
-				const adapter = createAdapter(account);
-				const remoteFiles = await adapter.fetchStructure();
-				const storage = await adapter.getStorageSummary();
+				const { remoteFiles, storage } = await fetchAccountSnapshot(account);
 
 				replaceFilesForAccount(account.id, remoteFiles);
 				updateAccountStorage(account.id, storage.totalSpace, storage.usedSpace);
 				changesDetected += remoteFiles.length;
 			} catch (error) {
-				clearFilesForAccount(account.id);
-				markAccountStatus(account.id, 'invalid_token');
-				console.error(`Sync failed for account ${account.email}:`, error.message);
+				handleSyncFailure(account, error);
 			}
 		}
 
@@ -71,9 +102,7 @@ export function getLastSyncReport() {
 
 export async function syncAccount(account) {
 	try {
-		const adapter = createAdapter(account);
-		const remoteFiles = await adapter.fetchStructure();
-		const storage = await adapter.getStorageSummary();
+		const { remoteFiles, storage } = await fetchAccountSnapshot(account);
 
 		replaceFilesForAccount(account.id, remoteFiles);
 		updateAccountStorage(account.id, storage.totalSpace, storage.usedSpace);
@@ -85,8 +114,7 @@ export async function syncAccount(account) {
 			usedSpace: storage.usedSpace,
 		};
 	} catch (error) {
-		clearFilesForAccount(account.id);
-		markAccountStatus(account.id, 'invalid_token');
+		handleSyncFailure(account, error);
 		throw error;
 	}
 }
