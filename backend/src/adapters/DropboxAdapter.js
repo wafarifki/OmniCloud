@@ -166,6 +166,8 @@ export class DropboxAdapter extends BaseCloudAdapter {
 					mime_type: isFolder ? null : 'application/octet-stream',
 					remote_file_id: entry.id || entry.path_lower,
 					remote_parent_id: toVirtualPath(entry.path_display || entry.path_lower),
+					remote_created_time: null,
+					remote_modified_time: isFolder ? null : entry.server_modified || null,
 				};
 			});
 	}
@@ -280,7 +282,7 @@ export class DropboxAdapter extends BaseCloudAdapter {
 			mime_type: fileRecord.mime_type,
 			size: Number(remote.size || fileRecord.size || 0),
 			createdTime: null,
-			modifiedTime: remote.server_modified || remote.client_modified || fileRecord.updated_at,
+			modifiedTime: remote.server_modified || null,
 			webViewLink: null,
 			owner_email: this.account.email,
 			remote_parent_id: toVirtualPath(remote.path_display || remote.path_lower),

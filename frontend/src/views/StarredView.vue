@@ -52,7 +52,7 @@ const filteredFiles = computed(() => files.value.filter((file) => {
 	}
 	const typeMatches = selectedTypeFilter.value === 'all' || getFileCategory(file) === selectedTypeFilter.value;
 	const ownerMatches = selectedOwnerFilter.value === 'all' || file.email === selectedOwnerFilter.value;
-	const updatedMatches = selectedUpdatedFilter.value === 'all' || matchesUpdatedFilter(file.updated_at, selectedUpdatedFilter.value);
+	const updatedMatches = selectedUpdatedFilter.value === 'all' || matchesUpdatedFilter(getModifiedTime(file), selectedUpdatedFilter.value);
 	return typeMatches && ownerMatches && updatedMatches;
 }));
 
@@ -76,8 +76,8 @@ const sortedFiles = computed(() => {
 				rightValue = Number(right.size || 0);
 				break;
 			default:
-				leftValue = new Date(left.updated_at || 0).getTime();
-				rightValue = new Date(right.updated_at || 0).getTime();
+				leftValue = new Date(getModifiedTime(left) || 0).getTime();
+				rightValue = new Date(getModifiedTime(right) || 0).getTime();
 				break;
 		}
 		if (leftValue < rightValue) return -1 * direction;
@@ -193,6 +193,14 @@ function formatDate(value) {
 		month: 'short',
 		year: 'numeric'
 	}).format(new Date(value));
+}
+
+function getCreatedTime(file) {
+	return file.createdTime;
+}
+
+function getModifiedTime(file) {
+	return file.modifiedTime;
 }
 
 function providerLabel(provider) {
@@ -763,7 +771,7 @@ onBeforeUnmount(() => {
 								<div v-if="providerIcon(item.provider)" class="flex size-6 shrink-0 items-center justify-center rounded-full bg-white dark:bg-slate-900/70"><img :src="providerIcon(item.provider)" :alt="providerLabel(item.provider)" class="size-3.5 object-contain" /></div>
 								<TruncateMarquee class="min-w-0" :text="item.email" />
 							</div>
-							<span class="text-[#5f6368] dark:text-slate-400">{{ formatDate(item.updated_at) }}</span>
+							<span class="text-[#5f6368] dark:text-slate-400">{{ formatDate(getModifiedTime(item)) }}</span>
 							<span class="text-[#5f6368] dark:text-slate-400">{{ item.is_folder ? '—' : formatBytes(item.size) }}</span>
 						</div>
 						<div v-if="!sortedFiles.length && !loading" class="p-[18px] text-[#5f6368] dark:text-slate-400">{{ t('drive.noFiles') }}</div>
@@ -789,7 +797,7 @@ onBeforeUnmount(() => {
 							</div>
 						</div>
 						<div class="flex w-full items-center justify-between text-xs text-[#5f6368] dark:text-slate-400">
-							<span>{{ formatDate(item.updated_at) }}</span>
+							<span>{{ formatDate(getModifiedTime(item)) }}</span>
 							<span>{{ item.is_folder ? t('drive.folder') : formatBytes(item.size) }}</span>
 						</div>
 					</button>
@@ -850,9 +858,9 @@ onBeforeUnmount(() => {
 						<dt class="text-[#5f6368] dark:text-slate-400">Provider</dt>
 						<dd>{{ providerLabel(detailsFile.provider) }}</dd>
 						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.created') }}</dt>
-						<dd>{{ formatDate(detailsFile.created_at || detailsFile.createdTime) }}</dd>
+						<dd>{{ formatDate(getCreatedTime(detailsFile)) }}</dd>
 						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.modified') }}</dt>
-						<dd>{{ formatDate(detailsFile.updated_at || detailsFile.modifiedTime) }}</dd>
+						<dd>{{ formatDate(getModifiedTime(detailsFile)) }}</dd>
 						<dt class="text-[#5f6368] dark:text-slate-400">{{ t('drive.location') }}</dt>
 						<dd class="break-all">{{ detailsFile.virtual_path }}</dd>
 						<dt class="text-[#5f6368] dark:text-slate-400">Remote ID</dt>

@@ -39,6 +39,8 @@ db.exec(`
     cloud_account_id TEXT NOT NULL,
     remote_file_id TEXT NOT NULL,
     remote_parent_id TEXT,
+    remote_created_time TEXT,
+    remote_modified_time TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(cloud_account_id) REFERENCES cloud_accounts(id) ON DELETE CASCADE
@@ -123,3 +125,13 @@ const deleteLegacyDemoData = db.transaction(() => {
 });
 
 deleteLegacyDemoData();
+
+const fileMetadataColumns = db.prepare('PRAGMA table_info(file_metadata)').all();
+
+if (!fileMetadataColumns.find((column) => column.name === 'remote_created_time')) {
+  db.exec('ALTER TABLE file_metadata ADD COLUMN remote_created_time TEXT');
+}
+
+if (!fileMetadataColumns.find((column) => column.name === 'remote_modified_time')) {
+  db.exec('ALTER TABLE file_metadata ADD COLUMN remote_modified_time TEXT');
+}

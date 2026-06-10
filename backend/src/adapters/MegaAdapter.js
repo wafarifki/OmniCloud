@@ -138,6 +138,8 @@ export class MegaAdapter extends BaseCloudAdapter {
 				mime_type: file.directory ? null : 'application/octet-stream',
 				remote_file_id: file.nodeId || file.downloadId,
 				remote_parent_id: file.parent?.nodeId || null,
+				remote_created_time: file.timestamp ? new Date(file.timestamp * 1000).toISOString() : null,
+				remote_modified_time: file.timestamp ? new Date(file.timestamp * 1000).toISOString() : null,
 			}));
 	}
 
@@ -206,7 +208,7 @@ export class MegaAdapter extends BaseCloudAdapter {
 			mime_type: fileRecord.mime_type,
 			size: Number(file.size || fileRecord.size || 0),
 			createdTime: file.timestamp ? new Date(file.timestamp * 1000).toISOString() : null,
-			modifiedTime: file.timestamp ? new Date(file.timestamp * 1000).toISOString() : fileRecord.updated_at,
+			modifiedTime: file.timestamp ? new Date(file.timestamp * 1000).toISOString() : null,
 			webViewLink: null,
 			owner_email: this.account.email,
 			remote_parent_id: file.parent?.nodeId || null,

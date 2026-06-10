@@ -38,6 +38,9 @@ export const api = {
 	listStarredFiles() {
 		return request('/files?starred=1');
 	},
+	listRecentFiles() {
+		return request('/files?recent=1');
+	},
 	getFileDetails(fileId) {
 		return request(`/files/${fileId}`);
 	},

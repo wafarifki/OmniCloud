@@ -96,7 +96,7 @@ export class GoogleDriveAdapter extends BaseCloudAdapter {
 		do {
 			const response = await drive.files.list({
 				q: 'trashed = false',
-				fields: 'nextPageToken, files(id, name, mimeType, size, parents, starred)',
+				fields: 'nextPageToken, files(id, name, mimeType, size, parents, starred, createdTime, modifiedTime)',
 				pageSize: 1000,
 				pageToken,
 				supportsAllDrives: false,
@@ -141,6 +141,8 @@ export class GoogleDriveAdapter extends BaseCloudAdapter {
 			mime_type: file.mimeType || null,
 			remote_file_id: file.id,
 			remote_parent_id: file.parents?.[0] || null,
+			remote_created_time: file.createdTime || null,
+			remote_modified_time: file.modifiedTime || null,
 		}));
 	}
 

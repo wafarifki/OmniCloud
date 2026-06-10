@@ -84,6 +84,8 @@ export class BaseCloudAdapter {
 			remote_file_id: fileRecord.remote_file_id,
 			provider: this.account.provider,
 			owner_email: this.account.email,
+			createdTime: fileRecord.remote_created_time,
+			modifiedTime: fileRecord.remote_modified_time,
 		};
 	}
 

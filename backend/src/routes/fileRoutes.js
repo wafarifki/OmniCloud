@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listFilesByPath, getFileById, listStarredFiles, setFileStarred, updateFileStarredByRemoteId } from '../services/fileService.js';
+import { listFilesByPath, getFileById, listRecentFiles, listStarredFiles, setFileStarred, updateFileStarredByRemoteId } from '../services/fileService.js';
 import { getAccountById } from '../services/accountService.js';
 import { createAdapter } from '../services/adapterRegistry.js';
 import { selectBestAccount } from '../services/spaceAllocator.js';
@@ -40,7 +40,11 @@ function ensureFileContext(context, res) {
 }
 
 router.get('/files', (req, res) => {
-	const files = req.query.starred === '1' ? listStarredFiles() : listFilesByPath(req.query.path || '/');
+	const files = req.query.starred === '1'
+		? listStarredFiles()
+		: req.query.recent === '1'
+			? listRecentFiles()
+			: listFilesByPath(req.query.path || '/');
 	res.json({ data: files });
 });
 

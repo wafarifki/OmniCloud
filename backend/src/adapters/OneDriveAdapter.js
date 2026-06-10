@@ -179,6 +179,8 @@ export class OneDriveAdapter extends BaseCloudAdapter {
 					mime_type: item.file?.mimeType || null,
 					remote_file_id: item.id,
 					remote_parent_id: item.parentReference?.id || (folderId === 'root' ? 'root' : folderId),
+					remote_created_time: item.createdDateTime || null,
+					remote_modified_time: item.lastModifiedDateTime || null,
 				});
 
 				if (isFolder) {

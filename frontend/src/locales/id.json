@@ -75,6 +75,18 @@
 		"fileModified": "Terakhir diubah",
 		"fileSize": "Ukuran file"
 	},
+	"recent": {
+		"today": "Hari ini",
+		"yesterday": "Kemarin",
+		"thisWeek": "Minggu ini",
+		"lastWeek": "Minggu lalu",
+		"thisMonth": "Bulan ini",
+		"lastMonth": "Bulan lalu",
+		"thisYear": "Tahun ini",
+		"lastYear": "Tahun lalu",
+		"older": "Lebih lama",
+		"empty": "Belum ada file terbaru."
+	},
 	"drive": {
 		"title": "Drive Saya",
 		"starredTitle": "Berbintang",
@@ -153,7 +165,7 @@
 	"mega": {
 		"connectTitle": "Hubungkan MEGA",
 		"email": "Email",
-		"emailPlaceholder": "nama@email.com",
+		"emailPlaceholder": "email{'@'}example.com",
 		"password": "Password",
 		"passwordPlaceholder": "Password akun MEGA",
 		"twoFactorCode": "Kode 2FA",

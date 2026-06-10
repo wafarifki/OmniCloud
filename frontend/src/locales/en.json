@@ -75,6 +75,18 @@
 		"fileModified": "Last modified",
 		"fileSize": "File size"
 	},
+	"recent": {
+		"today": "Today",
+		"yesterday": "Yesterday",
+		"thisWeek": "This week",
+		"lastWeek": "Last week",
+		"thisMonth": "This month",
+		"lastMonth": "Last month",
+		"thisYear": "This year",
+		"lastYear": "Last year",
+		"older": "Older",
+		"empty": "No recent files yet."
+	},
 	"drive": {
 		"title": "My Drive",
 		"starredTitle": "Starred",
@@ -153,7 +165,7 @@
 	"mega": {
 		"connectTitle": "Connect MEGA",
 		"email": "Email",
-		"emailPlaceholder": "email@example.com",
+		"emailPlaceholder": "email{'@'}example.com",
 		"password": "Password",
 		"passwordPlaceholder": "MEGA account password",
 		"twoFactorCode": "2FA Code",

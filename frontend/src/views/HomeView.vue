@@ -54,6 +54,10 @@ function formatDate(value) {
 	}).format(new Date(value));
 }
 
+function getModifiedTime(file) {
+	return file.modifiedTime;
+}
+
 function providerLabel(provider) {
 	if (provider === 'google_drive') return 'Google Drive';
 	if (provider === 'onedrive') return 'OneDrive';
@@ -125,7 +129,7 @@ onMounted(loadPage);
 			<section class="mt-[26px]">
 				<div class="mb-3 flex items-center justify-between gap-3">
 					<h2 class="m-0 text-base font-medium text-[#202124] dark:text-slate-100">{{ t('home.recentFiles') }}</h2>
-					<button type="button" class="rounded-full border border-[#dadce0] bg-white px-3.5 py-2 text-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">{{ t('home.viewAll') }}</button>
+					<RouterLink to="/recent" class="rounded-full border border-[#dadce0] bg-white px-3.5 py-2 text-[#1a73e8] dark:border-slate-600 dark:bg-slate-800 dark:text-sky-400">{{ t('home.viewAll') }}</RouterLink>
 				</div>
 
 				<div class="overflow-hidden rounded-2xl border border-[#e0e3e7] dark:border-slate-700">
@@ -147,7 +151,7 @@ onMounted(loadPage);
 							</div>
 							<TruncateMarquee class="min-w-0" :text="file.email" />
 						</div>
-						<span class="text-[#5f6368] dark:text-slate-400">{{ formatDate(file.updated_at) }}</span>
+						<span class="text-[#5f6368] dark:text-slate-400">{{ formatDate(getModifiedTime(file)) }}</span>
 						<span class="text-[#5f6368] dark:text-slate-400 max-md:hidden">{{ formatBytes(file.size) }}</span>
 					</div>
 
