@@ -51,9 +51,10 @@ export const useUploadQueueStore = defineStore('uploadQueue', {
 	getters: {
 		activeUploads: (state) => state.uploads.filter((item) => !['completed', 'failed', 'cancelled'].includes(item.status)),
 		totalProgress: (state) => {
-			if (!state.uploads.length) return 0;
-			const total = state.uploads.reduce((sum, item) => sum + item.progress_percentage, 0);
-			return Math.round(total / state.uploads.length);
+			const activeItems = state.uploads.filter((item) => !['completed', 'failed', 'cancelled'].includes(item.status));
+			if (!activeItems.length) return 0;
+			const total = activeItems.reduce((sum, item) => sum + item.progress_percentage, 0);
+			return Math.round(total / activeItems.length);
 		},
 	},
 	actions: {
