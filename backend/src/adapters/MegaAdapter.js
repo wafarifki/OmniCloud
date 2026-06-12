@@ -1,5 +1,6 @@
 import { Storage } from 'megajs';
 import { BaseCloudAdapter } from './BaseCloudAdapter.js';
+import { guessMimeType } from '../utils/mime.js';
 import { decryptJson } from '../utils/crypto.js';
 import { updateAccountCredentials } from '../services/accountService.js';
 
@@ -184,7 +185,7 @@ export class MegaAdapter extends BaseCloudAdapter {
 				file_name: file.name,
 				is_folder: Boolean(file.directory),
 				size: file.directory ? 0 : Number(file.size || 0),
-				mime_type: file.directory ? null : 'application/octet-stream',
+				mime_type: file.directory ? null : guessMimeType(file.name),
 				remote_file_id: file.nodeId || file.downloadId,
 				remote_parent_id: file.parent?.nodeId || null,
 				remote_created_time: file.timestamp ? new Date(file.timestamp * 1000).toISOString() : null,

@@ -10,6 +10,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { BaseCloudAdapter } from './BaseCloudAdapter.js';
+import { guessMimeType } from '../utils/mime.js';
 import { decryptJson } from '../utils/crypto.js';
 
 const FOLDER_MARKER = '/';
@@ -123,7 +124,7 @@ export class S3Adapter extends BaseCloudAdapter {
 				file_name: keyToName(key),
 				is_folder: false,
 				size: Number(object.Size || 0),
-				mime_type: 'application/octet-stream',
+				mime_type: guessMimeType(keyToName(key)),
 				remote_file_id: key,
 				remote_parent_id: keyToVirtualPath(key),
 				remote_created_time: null,

@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { db } from '../config/database.js';
+import { resolveMimeType } from '../utils/mime.js';
 
 function normalizePath(input = '/') {
 	if (!input || input === '/') return '/';
@@ -46,7 +47,7 @@ export function createFileMetadata(record) {
 		file_name: record.file_name,
 		is_folder: record.is_folder ? 1 : 0,
 		size: record.size,
-		mime_type: record.mime_type || null,
+		mime_type: resolveMimeType(record),
 		cloud_account_id: record.cloud_account_id,
 		remote_file_id: record.remote_file_id,
 		remote_parent_id: record.remote_parent_id || null,
@@ -158,7 +159,7 @@ export function replaceFilesForAccount(userId, cloudAccountId, records) {
 		is_folder: record.is_folder ? 1 : 0,
 		is_starred: record.is_starred ? 1 : 0,
 		size: Number(record.size || 0),
-		mime_type: record.mime_type || null,
+		mime_type: resolveMimeType(record),
 		cloud_account_id: cloudAccountId,
 		remote_file_id: record.remote_file_id,
 		remote_parent_id: record.remote_parent_id || null,

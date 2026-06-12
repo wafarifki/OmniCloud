@@ -1,5 +1,6 @@
 import { Readable } from 'stream';
 import { BaseCloudAdapter } from './BaseCloudAdapter.js';
+import { guessMimeType } from '../utils/mime.js';
 import { decryptJson } from '../utils/crypto.js';
 
 function normalizePath(input = '/') {
@@ -200,7 +201,7 @@ export class DropboxAdapter extends BaseCloudAdapter {
 					file_name: entry.name,
 					is_folder: isFolder,
 					size: isFolder ? 0 : Number(entry.size || 0),
-					mime_type: isFolder ? null : 'application/octet-stream',
+					mime_type: isFolder ? null : guessMimeType(entry.name),
 					remote_file_id: entry.id || entry.path_lower,
 					remote_parent_id: toVirtualPath(entry.path_display || entry.path_lower),
 					remote_created_time: null,
